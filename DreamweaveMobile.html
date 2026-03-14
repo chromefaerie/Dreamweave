@@ -50,7 +50,8 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: max(15vh, calc(var(--safe-top) + 48px));
   gap: 30px;
   transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.4s ease;
 }
@@ -839,23 +840,30 @@ svg.filters { position: absolute; width: 0; height: 0; }
 /* ── NOTEPAD POPUP (poems) ── */
 #m-notepad-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 7000; display: none; }
 #m-notepad-overlay.open { display: block; }
-#m-notepad { position: fixed; inset: 16px; z-index: 7001; background: var(--window-bg); border: 2px solid var(--pink); border-radius: 8px; display: none; flex-direction: column; overflow: hidden; }
+#m-notepad { position: fixed; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); max-height: 75vh; z-index: 7001; background: var(--window-bg); border: 2px solid var(--pink); border-radius: 8px; display: none; flex-direction: column; overflow: hidden; }
 #m-notepad.open { display: flex; }
 .m-notepad-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--pink-border); background: rgba(16,8,5,0.98); flex-shrink: 0; }
 .m-notepad-title { font-family: var(--font); font-size: 13px; color: var(--pink); letter-spacing: 2px; text-shadow: 0 0 8px var(--pink); }
 .m-notepad-close { font-size: 14px; color: var(--pink); padding: 2px 8px; border: 1px solid var(--pink-border); letter-spacing: 0; }
 .m-notepad-date { font-family: var(--font); font-size: 10px; color: var(--pink-dim); letter-spacing: 1px; padding: 6px 14px; border-bottom: 1px solid var(--pink-border); flex-shrink: 0; background: rgba(16,8,5,0.98); }
-.m-notepad-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 14px; font-family: var(--font); font-size: 14px; color: var(--pink); letter-spacing: 1px; line-height: 1.9; white-space: pre-wrap; }
+.m-notepad-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 14px; font-family: var(--font); font-size: 14px; color: var(--pink); letter-spacing: 1px; line-height: 1.9; white-space: pre-wrap; }
 
-/* ── MEDIA POPUP (images / iframes) ── */
+/* ── CONTACT POPUP ── */
+#m-contact-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 7000; display: none; }
+#m-contact-overlay.open { display: block; }
+#m-contact-popup { position: fixed; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); max-height: 85vh; z-index: 7001; background: var(--window-bg); border: 2px solid var(--pink); border-radius: 8px; display: none; flex-direction: column; overflow: hidden; }
+#m-contact-popup.open { display: flex; }
+.m-contact-popup-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--pink-border); background: rgba(16,8,5,0.98); flex-shrink: 0; }
+.m-contact-popup-title { font-family: var(--font); font-size: 13px; color: var(--pink); letter-spacing: 2px; text-shadow: 0 0 8px var(--pink); }
+.m-contact-popup-close { font-size: 14px; color: var(--pink); padding: 2px 8px; border: 1px solid var(--pink-border); letter-spacing: 0; }
 #m-media-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 7000; display: none; }
 #m-media-overlay.open { display: block; }
-#m-media-popup { position: fixed; inset: 16px; z-index: 7001; background: var(--window-bg); border: 2px solid var(--pink); border-radius: 8px; display: none; flex-direction: column; overflow: hidden; }
+#m-media-popup { position: fixed; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); max-height: 80vh; z-index: 7001; background: var(--window-bg); border: 2px solid var(--pink); border-radius: 8px; display: none; flex-direction: column; overflow: hidden; }
 #m-media-popup.open { display: flex; }
 .m-media-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--pink-border); background: rgba(16,8,5,0.98); flex-shrink: 0; }
 .m-media-title { font-family: var(--font); font-size: 13px; color: var(--pink); letter-spacing: 2px; text-shadow: 0 0 8px var(--pink); }
 .m-media-close { font-size: 14px; color: var(--pink); padding: 2px 8px; border: 1px solid var(--pink-border); letter-spacing: 0; }
-.m-media-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0; display: flex; flex-direction: column; }
+.m-media-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0; display: flex; flex-direction: column; }
 
 /* Scanlines — lock screen and home screen backgrounds only */
 #lock-screen::after,
@@ -1273,6 +1281,37 @@ svg.filters { position: absolute; width: 0; height: 0; }
     <div class="m-archive-breadcrumb" id="m-archive-breadcrumb">📂 ARCHIVE</div>
     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
       <div class="m-archive-grid" id="m-archive-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Contact popup -->
+<div id="m-contact-overlay" onclick="mCloseContact()"></div>
+<div id="m-contact-popup" role="dialog" aria-label="Contact">
+  <div class="m-contact-popup-header">
+    <div class="m-contact-popup-title">CONTACT.TXT</div>
+    <div class="m-contact-popup-close" onclick="mCloseContact()" role="button">✕</div>
+  </div>
+  <div class="app-page-body" style="overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <div class="m-dialog-body">
+      <div class="m-dialog-msg">commissions · collabs · inquiries · love letters</div>
+      <div class="m-dialog-field">
+        <label>NAME</label>
+        <input type="text" id="m-contact-name" placeholder="your name_" autocomplete="name">
+      </div>
+      <div class="m-dialog-field">
+        <label>EMAIL</label>
+        <input type="email" id="m-contact-email" placeholder="your@email.com_" autocomplete="email">
+      </div>
+      <div class="m-dialog-field">
+        <label>MESSAGE</label>
+        <textarea rows="5" id="m-contact-message" placeholder="tell me about the project..._"></textarea>
+      </div>
+      <div class="m-dialog-btns">
+        <div class="m-dialog-btn" onclick="mCloseContact()" role="button">CANCEL</div>
+        <div class="m-dialog-btn primary" onclick="mSendContact()" role="button">SEND →</div>
+      </div>
+      <div id="m-contact-confirm" style="display:none;margin-top:16px;padding:12px;border:1px solid var(--pink-border);font-size:14px;color:var(--pink);letter-spacing:2px;text-align:center;">✦ MESSAGE SENT ✦</div>
     </div>
   </div>
 </div>
@@ -1744,7 +1783,10 @@ document.querySelectorAll('.app-page').forEach(page => {
     if (SWIPE_CLOSE_EXCLUDE.some(id => target.closest('#' + id))) {
       startY = -1; return;
     }
-    if (page.querySelector('.app-page-body').scrollTop === 0) {
+    // Allow swipe from header or when body is scrolled to top
+    const body = page.querySelector('.app-page-body');
+    const fromHeader = target.closest('.app-page-header') || target.closest('.port-filters');
+    if (fromHeader || (body && body.scrollTop === 0)) {
       startY = e.touches[0].clientY;
     } else {
       startY = -1;
@@ -2089,6 +2131,27 @@ function mRenderArchive() {
   }
 }
 
+function mOpenContact() {
+  document.getElementById('m-contact-overlay').classList.add('open');
+  document.getElementById('m-contact-popup').classList.add('open');
+}
+function mCloseContact() {
+  document.getElementById('m-contact-overlay').classList.remove('open');
+  document.getElementById('m-contact-popup').classList.remove('open');
+}
+
+// Swipe down to close contact popup
+(function() {
+  let startY = 0;
+  const cp = document.getElementById('m-contact-popup');
+  cp.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+  cp.addEventListener('touchend', e => {
+    const body = cp.querySelector('.app-page-body');
+    if (body && body.scrollTop > 0) return;
+    if (e.changedTouches[0].clientY - startY > 80) mCloseContact();
+  }, { passive: true });
+})();
+
 function mArchiveBack() {
   if (mArchivePath.length === 0) {
     closeApp('archive');
@@ -2136,6 +2199,7 @@ function mCloseNotepad() {
 // Init archive when opened
 const _mOpenAppOrig = openApp;
 openApp = function(name) {
+  if (name === 'contact') { mOpenContact(); return; }
   _mOpenAppOrig(name);
   if (name === 'archive') { mArchivePath = []; mRenderArchive(); }
   if (name === 'paint') { setTimeout(() => { mInitPaint(); mResizePaintCanvas(); }, 80); setTimeout(() => {
