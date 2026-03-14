@@ -1,0 +1,2709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Dreamweave Studio — Mobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://i.imgur.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #291d14;
+  --pink: #ff33a1;
+  --pink-dim: rgba(255,51,161,0.5);
+  --pink-faint: rgba(255,51,161,0.07);
+  --pink-border: rgba(255,51,161,0.25);
+  --window-bg: rgba(16, 8, 5, 0.98);
+  --dock-bg: rgba(16, 8, 5, 0.85);
+  --font: 'VT323', monospace;
+  --safe-top: env(safe-area-inset-top, 20px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Safari floating bottom toolbar — adds ~24px on top of safe-area-inset-bottom */
+@supports (-webkit-touch-callout: none) {
+  :root {
+    --safe-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  }
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* ── LOCK SCREEN ── */
+#lock-screen {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.4s ease;
+}
+#lock-screen.unlocking {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+#lock-screen canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.lock-time {
+  font-size: 72px;
+  color: var(--pink);
+  letter-spacing: 4px;
+  text-shadow: 0 0 20px var(--pink), 0 0 40px rgba(255,51,161,0.4);
+  line-height: 1;
+}
+.lock-date {
+  font-size: 18px;
+  color: var(--pink-dim);
+  letter-spacing: 3px;
+  margin-top: -10px;
+}
+
+.lock-text {
+  font-size: 16px;
+  color: var(--pink);
+  text-shadow: 0 0 8px var(--pink), 0 0 20px var(--pink);
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 1.6;
+  padding: 0 40px;
+  max-width: 320px;
+  text-transform: uppercase;
+}
+.lock-text em {
+  color: #fff;
+  font-style: normal;
+  text-shadow: 0 0 10px var(--pink), 0 0 24px var(--pink);
+}
+
+.lock-swipe {
+  position: absolute;
+  bottom: calc(40px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.lock-swipe-text {
+  font-size: 14px;
+  color: var(--pink-dim);
+  letter-spacing: 3px;
+  animation: swipePulse 2s ease-in-out infinite;
+}
+.lock-swipe-arrow {
+  font-size: 20px;
+  color: var(--pink);
+  animation: swipeBounce 2s ease-in-out infinite;
+}
+@keyframes swipePulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+@keyframes swipeBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes floatUpDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ── WHO IS SONJA PAGE ── */
+.sonja-marquee {
+  white-space: nowrap;
+  display: inline-block;
+  animation: marquee 30s linear infinite;
+  font-size: 14px;
+  color: rgba(255,51,161,0.85);
+  letter-spacing: 2px;
+}
+.sonja-star {
+  color: var(--pink);
+  text-shadow: 0 0 6px var(--pink), 0 0 12px var(--pink);
+  margin: 0 8px;
+}
+
+/* ── HOME SCREEN ── */
+#home-screen {
+  position: fixed; inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.home-statusbar {
+  height: calc(20px + var(--safe-top));
+  padding: 0 16px;
+  padding-top: var(--safe-top);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--pink);
+  text-shadow: 0 0 8px var(--pink), 0 0 16px var(--pink);
+  letter-spacing: 2px;
+  flex-shrink: 0;
+}
+
+.home-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── HOME GRID (4-column, matches sketch) ── */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: auto;
+  gap: 12px;
+}
+
+/* Portfolio preview: full width (4 cols) */
+.portfolio-preview-widget {
+  grid-column: span 4;
+  padding: 0;
+  overflow: hidden;
+}
+.portfolio-preview-widget::before { display: none; }
+.portfolio-preview-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  position: relative;
+}
+.portfolio-preview-text {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--pink-dim);
+  text-align: center;
+  padding: 14px;
+}
+.portfolio-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+
+/* Player widget: 2 cols */
+.player-widget-cell {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App cluster: 2×2 sub-grid of icons, spans 2 cols */
+.app-cluster {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+  align-content: center;
+}
+
+/* Cat widget: 2 cols */
+.cat-widget-cell {
+  grid-column: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cat-widget-cell img {
+  width: 120px;
+  image-rendering: pixelated;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 16px rgba(255,51,161,0.3));
+}
+.cat-widget-cell canvas {
+  position: absolute;
+  inset: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  pointer-events: none;
+}
+
+/* ── WIDGETS (shared) ── */
+.widget {
+  background: var(--window-bg);
+  border: 1px solid var(--pink-border);
+  border-radius: 16px;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.widget::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,51,161,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+.widget-label {
+  font-size: 11px;
+  color: var(--pink-dim);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* Player widget internals */
+.player-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  flex: 1;
+}
+.player-widget-title {
+  font-size: 13px;
+  color: var(--pink);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.player-widget-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+.pw-btn {
+  font-size: 18px;
+  color: var(--pink-dim);
+  padding: 4px;
+  transition: color 0.2s;
+}
+.pw-btn:active { color: var(--pink); }
+.pw-btn-main {
+  font-size: 20px;
+  color: var(--pink);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  padding-left: 3px;
+  border: 1px solid var(--pink-border);
+  border-radius: 50%;
+}
+.pw-btn-main:active { background: var(--pink-faint); }
+
+.player-progress {
+  height: 3px;
+  background: var(--pink-faint);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.player-progress-fill {
+  height: 100%;
+  background: var(--pink);
+  width: 0%;
+  border-radius: 2px;
+  transition: width 0.3s linear;
+}
+.app-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.app-icon-img {
+  width: 56px; height: 56px;
+  background: var(--window-bg);
+  border: 1px solid var(--pink-border);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.app-icon-img::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,51,161,0.06) 0%, transparent 50%);
+  border-radius: 14px;
+  pointer-events: none;
+}
+.app-icon:active .app-icon-img {
+  transform: scale(0.9);
+  border-color: var(--pink);
+}
+.app-icon-img span {
+  filter: grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5);
+}
+.app-icon-label {
+  font-size: 11px;
+  color: var(--pink);
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+/* ── DOCK ── */
+.dock {
+  flex-shrink: 0;
+  padding: 10px 32px calc(10px + var(--safe-bottom));
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--dock-bg);
+  border-top: 1px solid var(--pink-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.dock-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.dock-icon-img {
+  width: 52px; height: 52px;
+  background: var(--window-bg);
+  border: 1px solid var(--pink-border);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  transition: transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.dock-icon-img::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,51,161,0.06) 0%, transparent 50%);
+  border-radius: 14px;
+  pointer-events: none;
+}
+.dock-icon:active .dock-icon-img {
+  transform: scale(0.9);
+}
+.dock-icon-img span {
+  filter: grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5);
+}
+.dock-icon-label {
+  font-size: 10px;
+  color: var(--pink-dim);
+  letter-spacing: 1px;
+}
+
+/* ── APP PAGES (slide up from bottom) ── */
+.app-page {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 5000;
+  isolation: isolate;
+  transform: translateY(100%);
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.app-page.open {
+  transform: translateY(0);
+}
+
+.app-page-header {
+  display: flex;
+  align-items: center;
+  padding: calc(12px + var(--safe-top)) 16px 12px;
+  gap: 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--pink-border);
+  background: var(--window-bg);
+}
+.app-page-back {
+  font-size: 24px;
+  color: var(--pink);
+  padding: 4px 8px;
+  letter-spacing: 1px;
+}
+.app-page-back:active { opacity: 0.5; }
+.app-page-title {
+  font-size: 18px;
+  color: var(--pink);
+  letter-spacing: 3px;
+  text-shadow: 0 0 8px var(--pink);
+}
+
+.app-page-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── BOTTOM SHEET (for mini menus) ── */
+.bottom-sheet-overlay {
+  position: fixed; inset: 0;
+  background: transparent;
+  z-index: 6000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.bottom-sheet-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--window-bg);
+  border-top: 2px solid var(--pink);
+  border-radius: 16px 16px 0 0;
+  z-index: 6001;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  padding: 16px 20px calc(20px + var(--safe-bottom));
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.bottom-sheet.open {
+  transform: translateY(0);
+}
+.bottom-sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--pink-border);
+  border-radius: 2px;
+  margin: 0 auto 14px;
+}
+.bottom-sheet-title {
+  font-size: 15px;
+  color: var(--pink);
+  text-shadow: 0 0 8px var(--pink), 0 0 16px var(--pink);
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+  text-align: center;
+  line-height: 1.4;
+}
+.bottom-sheet-btn {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  font-family: var(--font);
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--pink);
+  border: 1px solid var(--pink-border);
+  background: transparent;
+  margin-bottom: 8px;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+.bottom-sheet-btn:active {
+  background: var(--pink-faint);
+  border-color: var(--pink);
+}
+
+/* ── CAT POPUP ── */
+#cat-popup {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: var(--window-bg);
+  border: 2px solid var(--pink);
+  border-radius: 12px;
+  padding: 24px;
+  z-index: 8000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+#cat-popup.show {
+  display: flex;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+#cat-popup img {
+  width: 100px; height: 100px;
+  image-rendering: pixelated;
+}
+#cat-popup .popup-text {
+  font-size: 14px;
+  color: var(--pink);
+  text-shadow: 0 0 8px var(--pink);
+  letter-spacing: 2px;
+  text-align: center;
+}
+#cat-popup .popup-ok {
+  padding: 6px 24px;
+  border: 1px solid var(--pink-border);
+  color: var(--pink-dim);
+  font-family: var(--font);
+  font-size: 14px;
+  letter-spacing: 2px;
+  background: transparent;
+}
+#cat-popup .popup-ok:active {
+  background: var(--pink-faint);
+  color: var(--pink);
+  border-color: var(--pink);
+}
+
+#media-viewer { z-index: 5500; }
+
+/* ── SONJA POPUP ── */
+#sonja-popup {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: var(--window-bg);
+  border: 2px solid var(--pink);
+  border-radius: 12px;
+  padding: 20px 20px 16px;
+  z-index: 7000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  width: min(320px, 90vw);
+  max-height: 85vh;
+  overflow: hidden;
+}
+#sonja-popup.show {
+  display: flex;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+#sonja-popup-overlay {
+  position: fixed; inset: 0;
+  background: transparent;
+  z-index: 6999;
+  display: none;
+}
+#sonja-popup-overlay.show { display: block; }
+svg.filters { position: absolute; width: 0; height: 0; }
+
+/* ── PORTFOLIO FILTERS ── */
+.port-filters {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid var(--pink-border);
+  background: var(--window-bg);
+  flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.port-filters::-webkit-scrollbar { display: none; }
+.port-filter {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--pink-dim);
+  letter-spacing: 2px;
+  border-right: 1px solid rgba(255,51,161,0.08);
+  text-align: center;
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.port-filter:active { background: var(--pink-faint); }
+.port-filter.active-filter { background: var(--pink); color: #1a0a08; }
+
+/* ── PORTFOLIO GRID ── */
+.m-proj-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.m-proj-item {
+  aspect-ratio: 4/3;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid rgba(255,51,161,0.06);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+}
+.m-proj-item:active { background: rgba(255,51,161,0.08); }
+.m-proj-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: filter 0.3s ease;
+  z-index: 0;
+}
+.m-proj-item.proj-active .m-proj-bg { filter: brightness(1) !important; }
+.m-proj-item > *:not(.m-proj-bg) { position: relative; z-index: 1; }
+.m-proj-num { position: absolute; top: 5px; left: 6px; font-size: 10px; color: var(--pink-dim); letter-spacing: 2px; z-index: 1; }
+.m-proj-title { font-size: 14px; color: var(--pink); letter-spacing: 1.5px; text-shadow: 0 0 6px var(--pink); line-height: 1.1; }
+.m-proj-medium { font-size: 11px; color: var(--pink); letter-spacing: 1px; opacity: 0.7; }
+.m-proj-sub { font-size: 10px; color: var(--pink-dim); letter-spacing: 0.5px; }
+.m-proj-item.hidden-proj { display: none; }
+
+/* ── ABOUT ── */
+.m-about-body { padding: 20px 18px 40px; }
+.m-about-body p { font-size: 15px; color: var(--pink); line-height: 1.8; margin-bottom: 10px; letter-spacing: 0.5px; }
+.m-about-label { font-size: 12px; color: var(--pink); letter-spacing: 3px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+.m-about-label::before { content: '■'; font-size: 6px; color: var(--pink); }
+.m-about-divider { border: none; border-top: 1px solid var(--pink-border); margin: 12px 0; }
+
+/* ── CONTACT ── */
+.m-dialog-body { padding: 20px 18px 40px; }
+.m-dialog-msg { font-size: 13px; color: var(--pink-dim); letter-spacing: 1px; margin-bottom: 16px; line-height: 1.6; border-left: 2px solid var(--pink-border); padding-left: 10px; }
+.m-dialog-field { margin-bottom: 12px; }
+.m-dialog-field label { display: block; font-size: 11px; color: var(--pink); text-shadow: 0 0 6px var(--pink), 0 0 12px var(--pink); letter-spacing: 2px; margin-bottom: 4px; }
+.m-dialog-field input, .m-dialog-field textarea {
+  width: 100%;
+  background: rgba(255,51,161,0.04);
+  border: 1px solid var(--pink-border);
+  border-bottom: 2px solid rgba(255,51,161,0.35);
+  color: var(--pink);
+  font-family: var(--font);
+  font-size: 16px;
+  padding: 8px 10px;
+  outline: none;
+  resize: none;
+  letter-spacing: 1px;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+.m-dialog-field input:focus, .m-dialog-field textarea:focus { border-color: var(--pink); background: rgba(255,51,161,0.06); }
+.m-dialog-field input::placeholder, .m-dialog-field textarea::placeholder { color: var(--pink-dim); }
+.m-dialog-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; border-top: 1px solid var(--pink-border); padding-top: 12px; }
+.m-dialog-btn { font-family: var(--font); font-size: 15px; letter-spacing: 2px; padding: 8px 18px; border: 1px solid var(--pink-border); background: transparent; color: var(--pink-dim); }
+.m-dialog-btn:active { background: var(--pink-faint); color: var(--pink); }
+.m-dialog-btn.primary { background: var(--pink); color: #1a0a08; border-color: var(--pink); }
+.m-dialog-btn.primary:active { background: rgba(255,51,161,0.8); }
+
+@keyframes spinSpiral { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+
+/* ── PAINT ── */
+#page-paint { overflow: hidden; }
+#paint-body { display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; }
+.m-paint-toolbar {
+  display: flex; align-items: center;
+  background: rgba(16,8,5,0.98);
+  border-bottom: 1px solid var(--pink-border);
+  padding: 6px 8px; gap: 6px; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.m-pt-tool {
+  font-family: var(--font); font-size: 13px; color: var(--pink-dim);
+  min-width: 40px; height: 32px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; letter-spacing: 0; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-pt-tool:active, .m-pt-tool.active-tool { color: var(--pink); border-color: var(--pink); background: var(--pink-faint); }
+.m-pt-sep { width: 1px; height: 24px; background: var(--pink-border); flex-shrink: 0; }
+.m-pt-size {
+  width: 28px; height: 32px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; -webkit-tap-highlight-color: transparent;
+}
+.m-pt-size-dot { border-radius: 50%; background: var(--pink-dim); pointer-events: none; }
+.m-pt-size.active-size .m-pt-size-dot { background: var(--pink); box-shadow: 0 0 0 2px var(--pink); }
+.m-paint-palette {
+  display: flex; flex-wrap: nowrap; gap: 4px;
+  background: rgba(16,8,5,0.98); border-top: 1px solid var(--pink-border);
+  padding: 6px 8px; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.m-paint-swatch {
+  width: 26px; height: 26px; flex-shrink: 0;
+  border: 1px solid rgba(255,51,161,0.2);
+  -webkit-tap-highlight-color: transparent;
+}
+.m-paint-swatch:active { transform: scale(1.2); border-color: var(--pink); }
+.m-paint-scroll-wrap {
+  position: relative; flex-shrink: 0;
+}
+.m-paint-fade-left, .m-paint-fade-right {
+  position: absolute; top: 0; bottom: 0; width: 28px;
+  pointer-events: none; z-index: 2;
+  transition: opacity 0.15s;
+}
+.m-paint-fade-left  { left: 0;  background: linear-gradient(to right, rgba(255,51,161,0.35), transparent); }
+.m-paint-fade-right { right: 0; background: linear-gradient(to left,  rgba(255,51,161,0.35), transparent); }
+.m-palette-fade-left  { left: 0;  background: linear-gradient(to right, rgba(16,8,5,0.95), transparent); }
+.m-palette-fade-right { right: 0; background: linear-gradient(to left,  rgba(16,8,5,0.95), transparent); }
+.m-paint-toolbar { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.m-paint-toolbar::-webkit-scrollbar { display: none; }
+.m-paint-palette { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.m-paint-palette::-webkit-scrollbar { display: none; }
+.m-paint-canvas-wrap { flex: 1; overflow: hidden; position: relative; background: #100805; }
+.m-paint-status {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(16,8,5,0.98); border-bottom: 1px solid var(--pink-border);
+  padding: 3px 8px; flex-shrink: 0;
+}
+
+/* ── SOLITAIRE ── */
+#page-solitaire { overflow: hidden; }
+#solitaire-body { overflow: hidden; padding: 0 !important; display: flex; flex-direction: column; }
+.m-sol-topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 12px; background: rgba(16,8,5,0.98);
+  border-bottom: 1px solid var(--pink-border); flex-shrink: 0;
+}
+.m-sol-newgame {
+  font-family: var(--font); font-size: 13px; color: var(--pink-dim);
+  border: 1px solid var(--pink-border); padding: 4px 10px; letter-spacing: 1px;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-sol-newgame:active { color: var(--pink); border-color: var(--pink); background: var(--pink-faint); }
+#m-sol-msg { font-family: var(--font); font-size: 12px; color: var(--pink-dim); letter-spacing: 1px; }
+#m-sol-board { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; position: relative; padding: 8px; box-sizing: border-box; user-select: none; }
+.m-sol-card {
+  position: absolute; box-sizing: border-box;
+  border: 1px solid rgba(255,51,161,0.4); border-radius: 3px;
+  background: #1a0d08; font-family: var(--font);
+  display: flex; flex-direction: column; padding: 2px 3px;
+  user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.m-sol-card.red { color: var(--pink); }
+.m-sol-card.black { color: #ffffff; }
+.m-sol-card.face-down {
+  background-color: #1a0d08;
+  background-image: repeating-linear-gradient(45deg, rgba(255,51,161,0.12) 0px, rgba(255,51,161,0.12) 2px, transparent 2px, transparent 8px);
+  display: flex; align-items: center; justify-content: center;
+}
+.m-sol-card.selected { border-color: var(--pink); box-shadow: 0 0 10px rgba(255,51,161,0.7); }
+.m-sol-rank { font-size: 13px; line-height: 1; letter-spacing: 0; }
+.m-sol-suit { font-size: 10px; line-height: 1; }
+.m-sol-center { font-size: 20px; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.m-sol-pile-empty {
+  position: absolute; box-sizing: border-box;
+  border: 1px dashed rgba(255,51,161,0.25); border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); color: rgba(255,51,161,0.25);
+}
+
+/* ── ARCHIVE ── */
+.m-archive-breadcrumb {
+  font-family: var(--font); font-size: 12px; color: var(--pink-dim);
+  letter-spacing: 1px; padding: 8px 12px;
+  border-bottom: 1px solid var(--pink-border);
+  background: rgba(16,8,5,0.98); flex-shrink: 0;
+  white-space: nowrap; overflow-x: auto;
+}
+.m-archive-breadcrumb span.clickable { color: var(--pink); text-decoration: underline; }
+.m-archive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 8px; }
+.m-archive-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 6px; border: 1px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-archive-item:active { background: rgba(255,51,161,0.1); border-color: rgba(255,51,161,0.3); }
+.m-archive-icon { font-size: 30px; filter: grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 5px rgba(255,51,161,0.5)); line-height: 1; }
+.m-archive-name { font-family: var(--font); font-size: 10px; color: var(--pink); text-shadow: 0 0 6px var(--pink); letter-spacing: 0.5px; text-align: center; line-height: 1.2; }
+
+/* ── NOTEPAD POPUP (poems) ── */
+#m-notepad-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 7000; display: none; }
+#m-notepad-overlay.open { display: block; }
+#m-notepad { position: fixed; inset: 16px; z-index: 7001; background: var(--window-bg); border: 2px solid var(--pink); border-radius: 8px; display: none; flex-direction: column; overflow: hidden; }
+#m-notepad.open { display: flex; }
+.m-notepad-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--pink-border); background: rgba(16,8,5,0.98); flex-shrink: 0; }
+.m-notepad-title { font-family: var(--font); font-size: 13px; color: var(--pink); letter-spacing: 2px; text-shadow: 0 0 8px var(--pink); }
+.m-notepad-close { font-size: 14px; color: var(--pink); padding: 2px 8px; border: 1px solid var(--pink-border); letter-spacing: 0; }
+.m-notepad-date { font-family: var(--font); font-size: 10px; color: var(--pink-dim); letter-spacing: 1px; padding: 6px 14px; border-bottom: 1px solid var(--pink-border); flex-shrink: 0; background: rgba(16,8,5,0.98); }
+.m-notepad-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 14px; font-family: var(--font); font-size: 14px; color: var(--pink); letter-spacing: 1px; line-height: 1.9; white-space: pre-wrap; }
+
+/* ── MEDIA POPUP (images / iframes) ── */
+#m-media-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 7000; display: none; }
+#m-media-overlay.open { display: block; }
+#m-media-popup { position: fixed; inset: 16px; z-index: 7001; background: var(--window-bg); border: 2px solid var(--pink); border-radius: 8px; display: none; flex-direction: column; overflow: hidden; }
+#m-media-popup.open { display: flex; }
+.m-media-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--pink-border); background: rgba(16,8,5,0.98); flex-shrink: 0; }
+.m-media-title { font-family: var(--font); font-size: 13px; color: var(--pink); letter-spacing: 2px; text-shadow: 0 0 8px var(--pink); }
+.m-media-close { font-size: 14px; color: var(--pink); padding: 2px 8px; border: 1px solid var(--pink-border); letter-spacing: 0; }
+.m-media-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0; display: flex; flex-direction: column; }
+
+/* Scanlines — lock screen and home screen backgrounds only */
+#lock-screen::after,
+#home-screen::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+  pointer-events: none;
+  z-index: 2;
+}
+</style>
+</head>
+<body>
+
+<!-- duotone filter: shadows=#100805, highlights=#291d14 -->
+<svg xmlns="http://www.w3.org/2000/svg" class="filters" aria-hidden="true" width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="duotone-brown">
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncR type="table" tableValues="0.063 0.161"/>
+        <feFuncG type="table" tableValues="0.031 0.114"/>
+        <feFuncB type="table" tableValues="0.020 0.078"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
+
+<!-- ── LOCK SCREEN ── -->
+<div id="lock-screen" role="dialog" aria-modal="true" aria-label="Lock screen — swipe up to enter">
+  <canvas id="lock-rain" aria-hidden="true"></canvas>
+  <div style="position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:30px;">
+    <div class="lock-time" id="lock-time" aria-live="polite">00:00</div>
+    <div class="lock-date" id="lock-date"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <div aria-hidden="true" style="font-size:32px;color:var(--pink);text-shadow:0 0 8px var(--pink),0 0 20px var(--pink);font-family:'Segoe UI','Apple Color Emoji','Noto Sans',sans-serif;">૮꒰˶ - ˕ -꒱ა</div>
+      <div class="lock-text">
+        DID YOU EVER GET THE FEELING<br>YOU WERE JUST A<br><em>LITTLE DIFFERENT?</em><br>
+        WELL, HERE'S OUR WEB PAGE.<br>
+        <em>YOU'VE FINALLY FOUND A HOME.</em>
+      </div>
+      <div aria-hidden="true" style="display:inline-block;font-size:36px;color:var(--pink);text-shadow:0 0 10px var(--pink),0 0 24px var(--pink);animation:spinSpiral 3s linear infinite;margin-top:8px;">꩜</div>
+    </div>
+  </div>
+  <div class="lock-swipe" style="position:absolute;z-index:3;" aria-hidden="true">
+    <div class="lock-swipe-arrow">⌃</div>
+    <div class="lock-swipe-text">SWIPE UP TO ENTER</div>
+  </div>
+</div>
+
+<!-- ── HOME SCREEN ── -->
+<div id="home-screen" aria-label="Home screen">
+  <canvas id="home-rain" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.13;pointer-events:none;z-index:0;"></canvas>
+  <div class="home-statusbar" style="position:relative;z-index:3;">
+    <span>DREAMWEAVE STUDIO</span>
+    <span id="home-clock">00:00</span>
+  </div>
+
+  <div class="home-content" style="position:relative;z-index:3;">
+    <div class="home-grid">
+      <!-- ROW 1: Portfolio preview widget (full width, 4×2) -->
+      <div class="widget portfolio-preview-widget" id="portfolio-preview" onclick="openApp('portfolio')" role="button" aria-label="Open Portfolio preview">
+        <div class="portfolio-preview-inner" id="portfolio-preview-inner">
+          <div class="portfolio-preview-text">DREAMWEAVE STUDIO</div>
+        </div>
+      </div>
+
+      <!-- ROW 2 LEFT: Player widget (2×2) -->
+      <div class="widget player-widget-cell" role="region" aria-label="Music player widget">
+        <div class="widget-label">NOW PLAYING</div>
+        <div class="player-widget">
+          <div class="player-widget-title" id="m-player-title">— ✦ —</div>
+          <div class="player-progress">
+            <div class="player-progress-fill" id="m-player-fill"></div>
+          </div>
+          <div class="player-widget-controls">
+            <div class="pw-btn" onclick="event.stopPropagation();mScPrev()" role="button" aria-label="Previous track"><span style="font-family:var(--font);font-size:18px;">|◀◀</span></div>
+            <div class="pw-btn pw-btn-main" id="m-play-btn" onclick="event.stopPropagation();mScToggle()" role="button" aria-label="Play or pause" style="font-family:var(--font);font-size:20px;">▶</div>
+            <div class="pw-btn" onclick="event.stopPropagation();mScNext()" role="button" aria-label="Next track"><span style="font-family:var(--font);font-size:18px;">▶▶|</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 2 RIGHT: 4 app icons in a 2×2 sub-grid -->
+      <div class="app-cluster">
+        <div class="app-icon" onclick="openApp('portfolio')" role="button" tabindex="0" aria-label="Open Portfolio">
+          <div class="app-icon-img"><span>🪩</span></div>
+          <div class="app-icon-label">PORTFOLIO</div>
+        </div>
+        <div class="app-icon" onclick="openApp('about')" role="button" tabindex="0" aria-label="Open About">
+          <div class="app-icon-img"><span>✨</span></div>
+          <div class="app-icon-label">ABOUT</div>
+        </div>
+        <div class="app-icon" onclick="openApp('contact')" role="button" tabindex="0" aria-label="Open Contact">
+          <div class="app-icon-img"><span>💌</span></div>
+          <div class="app-icon-label">CONTACT</div>
+        </div>
+        <div class="app-icon" onclick="openApp('archive')" role="button" tabindex="0" aria-label="Open Archive">
+          <div class="app-icon-img"><span>📂</span></div>
+          <div class="app-icon-label">ARCHIVE</div>
+        </div>
+      </div>
+
+      <!-- ROW 3 LEFT: 4 app icons in a 2×2 sub-grid -->
+      <div class="app-cluster">
+        <div class="app-icon" onclick="openApp('socials')" role="button" tabindex="0" aria-label="Open Instagram">
+          <div class="app-icon-img"><span>🦋</span></div>
+          <div class="app-icon-label">SOCIALS</div>
+        </div>
+        <div class="app-icon" onclick="openSonjaPopup()" role="button" tabindex="0" aria-label="Open Who is Sonja?">
+          <div class="app-icon-img"><span>🔮</span></div>
+          <div class="app-icon-label">SONJA.INFO</div>
+        </div>
+        <div class="app-icon" onclick="openApp('solitaire')" role="button" tabindex="0" aria-label="Open Solitaire">
+          <div class="app-icon-img"><span>♠️</span></div>
+          <div class="app-icon-label">SOLITAIRE</div>
+        </div>
+        <div class="app-icon" onclick="openApp('paint')" role="button" tabindex="0" aria-label="Open Paint">
+          <div class="app-icon-img"><span>🎨</span></div>
+          <div class="app-icon-label">PAINT</div>
+        </div>
+      </div>
+
+      <!-- ROW 3 RIGHT: Cat widget (2×2) -->
+      <div class="widget cat-widget-cell" onclick="catMeow()" role="button" aria-label="Pet the cat">
+        <canvas id="m-cat-stars" aria-hidden="true"></canvas>
+        <img src="https://i.imgur.com/cWyCrfY.png" alt="Pink pixel cat" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Dock -->
+  <div class="dock" role="navigation" aria-label="Dock" style="position:relative;z-index:3;">
+    <div class="dock-icon" onclick="openApp('portfolio')" role="button" tabindex="0" aria-label="Open Portfolio">
+      <div class="dock-icon-img"><span>🪩</span></div>
+      <div class="dock-icon-label">PORTFOLIO</div>
+    </div>
+    <div class="dock-icon" onclick="openApp('about')" role="button" tabindex="0" aria-label="Open About">
+      <div class="dock-icon-img"><span>✨</span></div>
+      <div class="dock-icon-label">ABOUT</div>
+    </div>
+    <div class="dock-icon" onclick="openApp('contact')" role="button" tabindex="0" aria-label="Open Contact">
+      <div class="dock-icon-img"><span>💌</span></div>
+      <div class="dock-icon-label">CONTACT</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP PAGES ── -->
+
+<!-- PORTFOLIO -->
+<div class="app-page" id="page-portfolio" aria-label="Portfolio">
+  <div class="app-page-header">
+    <div class="app-page-back" onclick="closeApp('portfolio')" role="button" aria-label="Back to home">←</div>
+    <div class="app-page-title">PORTFOLIO</div>
+  </div>
+  <!-- Filter tabs -->
+  <div class="port-filters" role="tablist">
+    <div class="port-filter active-filter" onclick="mFilterProjects('all',this)" role="tab">ALL</div>
+    <div class="port-filter" onclick="mFilterProjects('creative-direction',this)" role="tab">CREATIVE<br>DIRECTION</div>
+    <div class="port-filter" onclick="mFilterProjects('branding',this)" role="tab">BRANDING</div>
+    <div class="port-filter" onclick="mFilterProjects('pixel-art',this)" role="tab">PIXEL ART</div>
+    <div class="port-filter" onclick="mFilterProjects('game-design',this)" role="tab">GAME DESIGN</div>
+  </div>
+  <div class="app-page-body" id="portfolio-body">
+    <div class="m-proj-grid" id="m-proj-grid">
+
+      <div class="m-proj-item" data-cat="creative-direction" onclick="mOpenProjSheet('LAUNDRY SLAY','HOT GIRLS HAVE CHORES TOO',[{label:'PITCH DECK',url:'https://www.canva.com/design/DAHDD7HhH3c/twna8ETTnWlif6i0Udn1AA/view?embed'},{label:'PHOTOS',url:''},{label:'VIDEO',url:''},{label:'BTS',url:''},{label:'TEAM',team:'LAUNDRY SLAY'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/7L3sM1h.jpeg');filter:url(#duotone-brown) brightness(0.3);"></div>
+        <div class="m-proj-num">01</div>
+        <div class="m-proj-title">LAUNDRY SLAY</div>
+        <div class="m-proj-medium">PHOTOSHOOT · VIDEO SHOOT</div>
+        <div class="m-proj-sub">creative director · coming soon: summer 2026</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="creative-direction" onclick="mOpenProjSheet('MARSHMALLOW LOVER','MAKES ME NIBBLE NIBBLE',[{label:'PITCH DECK',url:'https://www.canva.com/design/DAHC7TaxXAU/90yZ96BfKjv2IcZh-6wyVA/view?embed'},{label:'MUSIC VIDEO',url:''},{label:'BTS',url:''},{label:'TEAM',team:'MARSHMALLOW LOVER'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/XcEikom.jpeg');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">02</div>
+        <div class="m-proj-title">MARSHMALLOW LOVER</div>
+        <div class="m-proj-medium">MUSIC VIDEO</div>
+        <div class="m-proj-sub">creative director · coming soon: spring 2026</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="creative-direction" onclick="mOpenProjSheet('NICK + BECCA','A BUZZ OF AN ENGAGEMENT',[{label:'PITCH DECK',url:'https://www.canva.com/design/DAHDAB8J2cM/tEbT-vqMoiEuVX7Yl4djnA/view?embed'},{label:'PHOTOS',url:''},{label:'BTS',url:''},{label:'TEAM',team:'NICK + BECCA'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/MxbgVpV.jpeg');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">03</div>
+        <div class="m-proj-title">NICK + BECCA</div>
+        <div class="m-proj-medium">PHOTOSHOOT</div>
+        <div class="m-proj-sub">creative director · coming soon: spring 2026</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="creative-direction" onclick="mOpenProjSheet('MULTITASKERS','MANY HANDS MAKE LIGHT WORK',[{label:'PITCH DECK',url:'https://www.canva.com/design/DAG_prBxQAw/UYNUp6PQEG47uU5R8vjBoA/view?embed'},{label:'PHOTOS',url:''},{label:'BTS',url:''},{label:'TEAM',team:'MULTITASKERS'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/CkfeJ0s.jpeg');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">04</div>
+        <div class="m-proj-title">MULTITASKERS</div>
+        <div class="m-proj-medium">PHOTOSHOOT</div>
+        <div class="m-proj-sub">creative director · feb 2026</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="branding pixel-art" onclick="mOpenProjSheet('TWILIGHT + VINE','CROCHET FOR RAVERS + ROLLERS',[{label:'LOGO',url:'https://i.imgur.com/LRq3whC.png'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/LRq3whC.png');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">05</div>
+        <div class="m-proj-title">TWILIGHT + VINE</div>
+        <div class="m-proj-medium">LOGO · BRANDING</div>
+        <div class="m-proj-sub">pixel artist · jan 2026</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="pixel-art" onclick="mOpenProjSheet('LUNA YEN','MAIN CHARACTER ENERGY',[{label:'ANIMATION',url:'https://i.imgur.com/WVbk56X.gif'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/WVbk56X.gif');filter:url(#duotone-brown) brightness(0.35);"></div>
+        <div class="m-proj-num">06</div>
+        <div class="m-proj-title">LUNA YEN</div>
+        <div class="m-proj-medium">PIXEL ANIMATION</div>
+        <div class="m-proj-sub">pixel artist · fall 2025</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="branding" onclick="mOpenProjSheet('LAVANDE','SWEET LIKE LAVANDE',[{label:'LOGO + ASSETS',url:'https://www.canva.com/design/DAGx8qCk-Zg/9rmU0CK9MZmLGtrZiUkloA/view?embed'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/RCsnloe.png');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">07</div>
+        <div class="m-proj-title">LAVANDE</div>
+        <div class="m-proj-medium">LOGO · BRANDING</div>
+        <div class="m-proj-sub">graphic designer · fall 2025</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="pixel-art" onclick="mOpenProjSheet('COVEN COLLECTIVE','SUGAR, SPICE, AND EVERYTHING NICE',[{label:'ANIMATIONS',url:'coven-gallery'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/qEpc8y0.gif');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">08</div>
+        <div class="m-proj-title">COVEN COLLECTIVE</div>
+        <div class="m-proj-medium">PIXEL ANIMATIONS</div>
+        <div class="m-proj-sub">pixel artist · jun 2025</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="creative-direction" onclick="mOpenProjSheet('DO YOU PLEASER?','THE THINGS YOU CAN DO WHEN YOU WEAR THE RIGHT SHOE',[{label:'VIDEO',url:'https://player.vimeo.com/video/1172293718?badge=0&autopause=0&player_id=0&app_id=58479&dnt=1&loop=1'},{label:'TEAM',team:'DO YOU PLEASER?'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/gdnumam.gif');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">09</div>
+        <div class="m-proj-title">DO YOU PLEASER?</div>
+        <div class="m-proj-medium">SOCIAL REEL</div>
+        <div class="m-proj-sub">creative director · editor · feb 2024</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="branding" onclick="mOpenProjSheet('LADYJANEDANCE.COM','MOM, MOMMY, MOTHER',[{label:'BRANDING',url:'https://www.canva.com/design/DAGJLjKwrGI/7ulU0KC27CrLiC_vuM1zOA/view?embed'},{label:'SCREENSHOTS',url:'https://www.canva.com/design/DAHDrEYaVCk/c-ZV8omapSz0mG8hwf5_hw/view?embed'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/HPyDsZO.gif');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">10</div>
+        <div class="m-proj-title">LADYJANEDANCE.COM</div>
+        <div class="m-proj-medium">WEBSITE · BRANDING</div>
+        <div class="m-proj-sub">web designer · jul 2024</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="branding" onclick="mOpenProjSheet('THE BACKWARDS BIKINI TOP',&quot;UM, YOU'RE WEARING IT BACKWARDS&quot;,[{label:'BUSINESS CARD',url:'https://www.canva.com/design/DAGIzuaD8Wg/tPmZZue11jTLTV0IKWU_JA/view?embed'},{label:'LOGO / STICKERS',url:'https://www.canva.com/design/DAGIzYAaocM/n0XVIx8h1gVmtsPIurqHdw/view?embed'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/alTvnJP.png');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">11</div>
+        <div class="m-proj-title">THE BACKWARDS BIKINI TOP</div>
+        <div class="m-proj-medium">LOGO · BRANDING</div>
+        <div class="m-proj-sub">graphic designer · jul 2024</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="branding" onclick="mOpenProjSheet('BUBBLE SKINCARE','MARCH TO THE BEAT OF YOUR OWN FACE',[{label:'MOTION GRAPHIC',url:'https://i.imgur.com/QBfaKai.gif'},{label:'TEAM',team:'BUBBLE SKINCARE'}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/QBfaKai.gif');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">12</div>
+        <div class="m-proj-title">BUBBLE SKINCARE</div>
+        <div class="m-proj-medium">MOTION GRAPHIC</div>
+        <div class="m-proj-sub">motion graphic designer · apr 2024</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="game-design pixel-art" onclick="mOpenProjSheet('CONGA CRITTERS','IF SNAKE WAS A RACCOON PARTY',[{label:'CONCEPT ART',url:'https://www.canva.com/design/DAHDkl8b_n0/aiNSjkqZHPKelZXIeoVTaw/view?embed'},{label:'PLAY GAME',url:''}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/X63HWac.gif');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">13</div>
+        <div class="m-proj-title">CONGA CRITTERS</div>
+        <div class="m-proj-medium">VIDEO GAME</div>
+        <div class="m-proj-sub">game designer · pixel artist · in development</div>
+      </div>
+
+      <div class="m-proj-item" data-cat="game-design pixel-art" onclick="mOpenProjSheet('REVERB','REBUILD A CITY\'S SOUL THROUGH RAVES',[{label:'CONCEPT ART',url:'https://i.imgur.com/FXjhtPm.gif'},{label:'GDD',url:''}],this)" role="button">
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/FXjhtPm.gif');filter:url(#duotone-brown) brightness(0.25);"></div>
+        <div class="m-proj-num">14</div>
+        <div class="m-proj-title">REVERB</div>
+        <div class="m-proj-medium">VIDEO GAME</div>
+        <div class="m-proj-sub">game designer · pixel artist · in development</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div class="app-page" id="page-about" aria-label="About">
+  <div class="app-page-header">
+    <div class="app-page-back" onclick="closeApp('about')" role="button" aria-label="Back to home">←</div>
+    <div class="app-page-title">ABOUT</div>
+  </div>
+  <div class="app-page-body" id="about-body">
+    <div class="m-about-body">
+      <div class="m-about-label">DREAMWEAVE STUDIO</div>
+      <hr class="m-about-divider">
+      <p>Welcome to Dreamweave Studio. I'm <span onclick="openSonjaPopup()" style="color:var(--pink);text-shadow:0 0 8px var(--pink),0 0 16px var(--pink),0 0 30px var(--pink);">SONJA SCHOUTEN</span>, a multidisciplinary artist and designer with focuses on creative direction, digital design, pixel art, and branding.</p>
+      <p>Working in video, photo, graphic, and video game mediums, I love to infuse nostalgia and play into my projects.</p>
+      <p>Tell me all about your project dreams! I work with a team of highly skilled collaborators to weave your dreams into reality.</p>
+      <hr class="m-about-divider">
+      <div class="m-about-label">COLLABORATORS</div>
+      <br>
+      <p style="font-size:14px;letter-spacing:1px;line-height:2.2;">
+        Caitlin Acken Taylor — @oakandbone<br>
+        Daniel Taggart-Hodge — @dth.35mm<br>
+        Kitty Zhang — @kittywithphotography<br>
+        Danielle Acken — @dlackenphotos<br>
+        Sandy Rossignol — @adsfortargeting
+      </p>
+      <hr class="m-about-divider">
+      <div class="m-about-label">LOCATION</div>
+      <br>
+      <p style="font-size:14px;letter-spacing:1px;">Victoria, BC · Canada</p>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div class="app-page" id="page-contact" aria-label="Contact">
+  <div class="app-page-header">
+    <div class="app-page-back" onclick="closeApp('contact')" role="button" aria-label="Back to home">←</div>
+    <div class="app-page-title">CONTACT</div>
+  </div>
+  <div class="app-page-body" id="contact-body">
+    <div class="m-dialog-body">
+      <div class="m-dialog-msg">commissions · collabs · inquiries · love letters</div>
+      <div class="m-dialog-field">
+        <label>NAME</label>
+        <input type="text" id="m-contact-name" placeholder="your name_" autocomplete="name">
+      </div>
+      <div class="m-dialog-field">
+        <label>EMAIL</label>
+        <input type="email" id="m-contact-email" placeholder="your@email.com_" autocomplete="email">
+      </div>
+      <div class="m-dialog-field">
+        <label>MESSAGE</label>
+        <textarea rows="5" id="m-contact-message" placeholder="tell me about the project..._"></textarea>
+      </div>
+      <div class="m-dialog-btns">
+        <div class="m-dialog-btn" onclick="closeApp('contact')" role="button">CANCEL</div>
+        <div class="m-dialog-btn primary" onclick="mSendContact()" role="button">SEND →</div>
+      </div>
+      <div id="m-contact-confirm" style="display:none;margin-top:16px;padding:12px;border:1px solid var(--pink-border);font-size:14px;color:var(--pink);letter-spacing:2px;text-align:center;">✦ MESSAGE SENT ✦</div>
+    </div>
+  </div>
+</div>
+
+<div class="app-page" id="page-paint" aria-label="Paint">
+  <div class="app-page-header">
+    <div class="app-page-back" onclick="closeApp('paint')" role="button" aria-label="Back to home">←</div>
+    <div class="app-page-title">PAINT</div>
+  </div>
+  <div class="app-page-body" id="paint-body">
+    <!-- Toolbar -->
+    <div class="m-paint-scroll-wrap" id="m-toolbar-wrap">
+      <div class="m-paint-fade-left"  id="m-toolbar-fade-left"  style="opacity:0"></div>
+      <div class="m-paint-fade-right" id="m-toolbar-fade-right" style="opacity:1"></div>
+    <div class="m-paint-toolbar" id="m-paint-toolbar">
+      <div class="m-pt-tool active-tool" id="m-tool-pencil" onclick="mSetPaintTool('pencil')">✏</div>
+      <div class="m-pt-tool" id="m-tool-eraser" onclick="mSetPaintTool('eraser')">ERASE</div>
+      <div class="m-pt-tool" id="m-tool-fill" onclick="mSetPaintTool('fill')">FILL</div>
+      <div class="m-pt-tool" id="m-tool-eyedropper" onclick="mSetPaintTool('eyedropper')">PICK</div>
+      <div class="m-pt-tool" id="m-tool-line" onclick="mSetPaintTool('line')">LINE</div>
+      <div class="m-pt-tool" id="m-tool-rect" onclick="mSetPaintTool('rect')">RECT</div>
+      <div class="m-pt-tool" id="m-tool-glow" onclick="mSetPaintTool('glow')">GLOW</div>
+      <div class="m-pt-tool" id="m-tool-spray" onclick="mSetPaintTool('spray')">SPRAY</div>
+      <div class="m-pt-sep"></div>
+      <div class="m-pt-size active-size" id="m-size-1" onclick="mSetPaintSize(1)"><div class="m-pt-size-dot" style="width:4px;height:4px;"></div></div>
+      <div class="m-pt-size" id="m-size-3" onclick="mSetPaintSize(3)"><div class="m-pt-size-dot" style="width:8px;height:8px;"></div></div>
+      <div class="m-pt-size" id="m-size-6" onclick="mSetPaintSize(6)"><div class="m-pt-size-dot" style="width:13px;height:13px;"></div></div>
+      <div class="m-pt-size" id="m-size-12" onclick="mSetPaintSize(12)"><div class="m-pt-size-dot" style="width:20px;height:20px;"></div></div>
+      <div class="m-pt-sep"></div>
+      <div class="m-pt-tool" onclick="mPaintClear()">CLR</div>
+      <div class="m-pt-tool" onclick="mPaintSave()">SAV</div>
+    </div>
+    </div>
+    <!-- Status bar -->
+    <div class="m-paint-status">
+      <span style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:1px;">COLOUR:</span>
+      <div id="m-paint-active-colour" style="width:16px;height:16px;border:1px solid var(--pink-border);background:#ff33a1;flex-shrink:0;"></div>
+      <span id="m-paint-colour-hex" style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:1px;">#FF33A1</span>
+      <span style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:1px;margin-left:8px;">TOOL:</span>
+      <span id="m-paint-tool-label" style="font-family:var(--font);font-size:11px;color:var(--pink);letter-spacing:1px;">PENCIL</span>
+    </div>
+    <!-- Canvas -->
+    <div class="m-paint-canvas-wrap" id="m-paint-canvas-wrap">
+      <canvas id="m-paint-canvas"></canvas>
+    </div>
+    <!-- Palette -->
+    <div class="m-paint-scroll-wrap" id="m-palette-wrap">
+      <div class="m-palette-fade-left"  id="m-palette-fade-left"  style="opacity:0;position:absolute;top:0;bottom:0;left:0;width:28px;pointer-events:none;z-index:2;transition:opacity 0.15s;"></div>
+      <div class="m-palette-fade-right" id="m-palette-fade-right" style="opacity:1;position:absolute;top:0;bottom:0;right:0;width:28px;pointer-events:none;z-index:2;transition:opacity 0.15s;"></div>
+    <div class="m-paint-palette" id="m-paint-palette"></div>
+    </div>
+  </div>
+</div>
+
+<div class="app-page" id="page-solitaire" aria-label="Solitaire">
+  <div class="app-page-header">
+    <div class="app-page-back" onclick="closeApp('solitaire')" role="button" aria-label="Back to home">←</div>
+    <div class="app-page-title">SOLITAIRE</div>
+  </div>
+  <div class="app-page-body" id="solitaire-body">
+    <div class="m-sol-topbar">
+      <div class="m-sol-newgame" onclick="mSolNewGame()">NEW GAME</div>
+      <span id="m-sol-msg"></span>
+    </div>
+    <div id="m-sol-board"></div>
+  </div>
+</div>
+
+<div class="app-page" id="page-archive" aria-label="Archive">
+  <div class="app-page-header">
+    <div class="app-page-back" onclick="mArchiveBack()" role="button" aria-label="Back">←</div>
+    <div class="app-page-title">ARCHIVE</div>
+  </div>
+  <div class="app-page-body" id="archive-body" style="display:flex;flex-direction:column;overflow:hidden;padding:0!important;">
+    <div class="m-archive-breadcrumb" id="m-archive-breadcrumb">📂 ARCHIVE</div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+      <div class="m-archive-grid" id="m-archive-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Notepad popup (poems) -->
+<div id="m-notepad-overlay" onclick="mCloseNotepad()"></div>
+<div id="m-notepad" role="dialog" aria-label="Poem viewer">
+  <div class="m-notepad-header">
+    <div class="m-notepad-title" id="m-notepad-title">POEM.TXT</div>
+    <div class="m-notepad-close" onclick="mCloseNotepad()" role="button">✕</div>
+  </div>
+  <div class="m-notepad-date" id="m-notepad-date"></div>
+  <div class="m-notepad-body" id="m-notepad-body"></div>
+</div>
+
+<!-- Media popup (images / iframes) -->
+<div id="m-media-overlay" onclick="mCloseMediaViewer()"></div>
+<div id="m-media-popup" role="dialog" aria-label="Media viewer">
+  <div class="m-media-header">
+    <div class="m-media-title" id="m-media-title">—</div>
+    <div class="m-media-close" onclick="mCloseMediaViewer()" role="button">✕</div>
+  </div>
+  <div class="m-media-body" id="m-media-body"></div>
+</div>
+
+<!-- Sonja popup -->
+<div id="sonja-popup-overlay" onclick="closeSonjaPopup()"></div>
+<div id="sonja-popup" role="dialog" aria-label="Who is Sonja?">
+  <div style="display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:4px;">
+    <div style="font-size:15px;color:var(--pink);text-shadow:0 0 8px var(--pink),0 0 16px var(--pink);letter-spacing:3px;">WHO IS SONJA?</div>
+    <div onclick="closeSonjaPopup()" style="font-size:14px;color:var(--pink);padding:2px 6px;border:1px solid var(--pink-border);letter-spacing:0;" role="button">✕</div>
+  </div>
+  <img src="https://i.imgur.com/KjhStkM.png" style="width:100px;image-rendering:pixelated;animation:floatUpDown 3s ease-in-out infinite;" alt="Sonja pixel art" />
+  <div style="overflow:hidden;width:100%;">
+    <div class="sonja-marquee">
+      FARMER'S DAUGHTER <span class="sonja-star">✦</span> CAT MOM TO MAX AND SOFIE <span class="sonja-star">✦</span> POLE DANCER <span class="sonja-star">✦</span> DISABLED BADDIE <span class="sonja-star">✦</span> FILM STUDENT <span class="sonja-star">✦</span> COFFEE SNOB <span class="sonja-star">✦</span> FKA TWIGS FANGIRL <span class="sonja-star">✦</span> ARIES SUN / TAURUS MOON / SCORPIO RISING / PISCES STELLIUM <span class="sonja-star">✦</span>&nbsp;
+      FARMER'S DAUGHTER <span class="sonja-star">✦</span> CAT MOM TO MAX AND SOFIE <span class="sonja-star">✦</span> POLE DANCER <span class="sonja-star">✦</span> DISABLED BADDIE <span class="sonja-star">✦</span> FILM STUDENT <span class="sonja-star">✦</span> COFFEE SNOB <span class="sonja-star">✦</span> FKA TWIGS FANGIRL <span class="sonja-star">✦</span> ARIES SUN / TAURUS MOON / SCORPIO RISING / PISCES STELLIUM <span class="sonja-star">✦</span>&nbsp;
+    </div>
+  </div>
+  <div onclick="closeSonjaPopup()" style="padding:6px 24px;border:1px solid var(--pink-border);color:var(--pink-dim);font-family:var(--font);font-size:14px;letter-spacing:2px;background:transparent;" role="button">COOL</div>
+</div>
+
+<!-- Bottom sheet -->
+<div class="bottom-sheet-overlay" id="bs-overlay" onclick="closeBottomSheet()"></div>
+<div class="bottom-sheet" id="bs-sheet">
+  <div class="bottom-sheet-handle"></div>
+  <div class="bottom-sheet-title" id="bs-title"></div>
+  <div id="bs-content"></div>
+</div>
+
+<!-- Cat popup -->
+<div id="cat-popup">
+  <img src="https://i.imgur.com/mdIE4Qd.gif" alt="Pixel cat gif">
+  <div class="popup-text">YOU HAVE RECEIVED A CAT.</div>
+  <div class="popup-ok" onclick="closeCatPopup()" role="button" tabindex="0">OK</div>
+</div>
+
+<!-- Hidden SC iframe -->
+<iframe id="m-sc-iframe" title="SoundCloud music player"
+  style="width:1px;height:1px;position:absolute;opacity:0;pointer-events:none;"
+  allow="autoplay">
+</iframe>
+
+<script>
+// ── PORTFOLIO FILTER ──
+function mFilterProjects(cat, el) {
+  document.querySelectorAll('.port-filter').forEach(f => f.classList.remove('active-filter'));
+  el.classList.add('active-filter');
+  document.querySelectorAll('.m-proj-item').forEach(item => {
+    if (cat === 'all' || item.dataset.cat.includes(cat)) {
+      item.classList.remove('hidden-proj');
+    } else {
+      item.classList.add('hidden-proj');
+    }
+  });
+}
+
+// ── PROJECT BOTTOM SHEET ──
+const TEAM_DATA = {
+  'LAUNDRY SLAY': [
+    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'PHOTOGRAPHER · VIDEOGRAPHER · EDITOR', name: 'KITTY ZHANG', handle: 'KITTY WITH PHOTOGRAPHY' },
+    { role: 'PRODUCER', name: 'CAITLIN ACKEN TAYLOR', handle: 'OAK AND BONE PRODUCTIONS' },
+    { role: 'MODEL', name: 'ALISON ALEXANDER', handle: '@THEALISONALEXANDER' },
+  ],
+  'MARSHMALLOW LOVER': [
+    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'VIDEOGRAPHER · EDITOR', name: 'DEANNA MILLIGAN', handle: 'SUBLUNAR FILMS' },
+    { role: 'SONG', name: 'MARSHMALLOW LOVER', handle: 'WRITTEN AND PERFORMED BY CAITLIN ACKEN TAYLOR' },
+    { role: 'TALENT', name: 'CAITLIN ACKEN TAYLOR', handle: '@OAKANDBONE' },
+  ],
+  'NICK + BECCA': [
+    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'PRODUCER', name: 'CAITLIN ACKEN TAYLOR', handle: 'OAK AND BONE PRODUCTIONS' },
+    { role: 'PHOTOGRAPHER', name: 'DANIEL TAGGART-HODGE', handle: '@DTH.35MM' },
+    { role: 'MODELS', name: 'NICK MARSON + BECCA MITCHELL', handle: '' },
+  ],
+  'MULTITASKERS': [
+    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'PRODUCER', name: 'CAITLIN ACKEN TAYLOR', handle: 'OAK AND BONE PRODUCTIONS' },
+    { role: 'PHOTOGRAPHER · EDITOR', name: 'DANIELLE ACKEN', handle: '@DLACKENPHOTOS' },
+    { role: 'SET BUILD', name: 'DANIEL TAGGART-HODGE', handle: '@DTH.35MM' },
+    { role: 'MODELS', members: [
+      { name: 'ALISON ALEXANDER', handle: '@THEALISONALEXANDER' },
+      { name: 'HEATHER DUMONT', handle: '@HELLO.ITS.LAVANDE' },
+      { name: 'JESS CLAIRMONT', handle: '@COUNTVONCVNT' },
+      { name: 'ROXANA FERARU', handle: '@ROXANAFERARU' },
+      { name: 'SONJA SCHOUTEN', handle: '@CUTEANDLANKY' },
+      { name: 'CAITLIN ACKEN TAYLOR', handle: '@OAKANDBONE' },
+    ]},
+  ],
+  'DO YOU PLEASER?': [
+    { role: 'CREATIVE DIRECTOR · EDITOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'VIDEOGRAPHER · COLOUR', name: 'SANDY ROSSIGNOL', handle: 'ADS FOR TARGETING' },
+    { role: 'DANCERS', members: [
+      { name: 'SONJA SCHOUTEN', handle: '@CHROMEFAERIE' },
+      { name: 'IVY DIVINE', handle: '@IVY.CLIMBS.CHROME' },
+      { name: 'ALIXX LUST', handle: '@ALIXXLUST' },
+    ]},
+  ],
+  'BUBBLE SKINCARE': [
+    { role: 'MOTION GRAPHIC DESIGNER', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'CONTRACTED BY', name: 'SANDY ROSSIGNOL', handle: 'ADS FOR TARGETING' },
+  ],
+};
+
+let activeProjItem = null;
+
+function mOpenProjSheet(title, tagline, items, triggerEl) {
+  if (activeProjItem) activeProjItem.classList.remove('proj-active');
+  activeProjItem = triggerEl || null;
+  if (activeProjItem) activeProjItem.classList.add('proj-active');
+
+  document.getElementById('bs-title').innerHTML = title + '<br><span style="font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink);letter-spacing:2px;opacity:0.75;">' + tagline + '</span>';
+  const content = document.getElementById('bs-content');
+  content.innerHTML = '';
+  items.forEach(item => {
+    const btn = document.createElement('div');
+    btn.className = 'bottom-sheet-btn';
+    btn.textContent = '✦ ' + item.label;
+    if (item.team) {
+      btn.onclick = () => mSwitchToTeamSheet(item.team, title, tagline, items);
+    } else if (item.url) {
+      btn.onclick = () => { closeBottomSheet(); mOpenMediaViewer(title + ' — ' + item.label, item.url); };
+    } else {
+      btn.style.opacity = '0.4';
+      btn.style.pointerEvents = 'none';
+    }
+    content.appendChild(btn);
+  });
+  requestAnimationFrame(() => {
+    document.getElementById('bs-overlay').classList.add('open');
+    document.getElementById('bs-sheet').classList.add('open');
+  });
+}
+
+function mSwitchToTeamSheet(project, returnTitle, returnTagline, returnItems) {
+  _pendingReturnSheet = { title: returnTitle, tagline: returnTagline, items: returnItems };
+  const sheet = document.getElementById('bs-sheet');
+  sheet.classList.remove('open');
+  setTimeout(() => mOpenTeamSheet(project), 420);
+}
+
+// Stores the proj sheet args to return to after closing team sheet
+let _pendingReturnSheet = null;
+
+function mOpenTeamSheet(project) {
+  const data = TEAM_DATA[project] || [];
+  document.getElementById('bs-title').textContent = project + ' — TEAM';
+  const content = document.getElementById('bs-content');
+  content.innerHTML = '';
+  if (data.length) {
+    data.forEach(m => {
+      const row = document.createElement('div');
+      row.style.cssText = 'border-bottom:1px solid rgba(255,51,161,0.1);padding:10px 0;';
+      if (m.members) {
+        let html = `<div style="font-size:11px;color:var(--pink-dim);letter-spacing:2px;margin-bottom:6px;">${m.role}</div>`;
+        m.members.forEach(p => {
+          html += `<div style="font-size:14px;color:var(--pink);letter-spacing:1px;line-height:1.3;">${p.name}</div>`;
+          if (p.handle) html += `<div style="font-size:11px;color:rgba(255,51,161,0.45);letter-spacing:1px;margin-bottom:3px;">${p.handle}</div>`;
+        });
+        row.innerHTML = html;
+      } else {
+        row.innerHTML = `<div style="font-size:11px;color:var(--pink-dim);letter-spacing:2px;">${m.role}</div><div style="font-size:14px;color:var(--pink);letter-spacing:1px;margin-top:2px;">${m.name}</div>${m.handle ? `<div style="font-size:11px;color:rgba(255,51,161,0.45);letter-spacing:1px;">${m.handle}</div>` : ''}`;
+      }
+      content.appendChild(row);
+    });
+  } else {
+    content.innerHTML = '<div style="font-size:12px;color:var(--pink-dim);letter-spacing:2px;padding:10px 0;">COMING SOON</div>';
+  }
+  requestAnimationFrame(() => {
+    document.getElementById('bs-overlay').classList.add('open');
+    document.getElementById('bs-sheet').classList.add('open');
+  });
+}
+
+// ── IN-SITE MEDIA VIEWER ──
+function mOpenMediaViewer(title, src) {
+  document.getElementById('m-media-title').textContent = title;
+  const body = document.getElementById('m-media-body');
+  body.innerHTML = '';
+
+  if (src === 'coven-gallery') {
+    ['https://i.imgur.com/qEpc8y0.gif','https://i.imgur.com/2GPTJYq.gif','https://i.imgur.com/1y86xoh.gif','https://i.imgur.com/JTGgtky.gif'].forEach(url => {
+      const img = document.createElement('img');
+      img.src = url; img.alt = 'Coven Collective animation';
+      img.style.cssText = 'width:100%;display:block;';
+      body.appendChild(img);
+    });
+  } else {
+    const isImage = /\.(gif|png|jpe?g)(\?|$)/i.test(src);
+    if (isImage) {
+      const img = document.createElement('img');
+      img.src = src; img.alt = title;
+      img.style.cssText = 'width:100%;display:block;';
+      body.appendChild(img);
+    } else {
+      const iframe = document.createElement('iframe');
+      iframe.src = src;
+      iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:calc(100vh - 120px);';
+      iframe.allow = 'autoplay; fullscreen';
+      body.appendChild(iframe);
+    }
+  }
+
+  document.getElementById('m-media-overlay').classList.add('open');
+  document.getElementById('m-media-popup').classList.add('open');
+}
+
+function mCloseMediaViewer() {
+  document.getElementById('m-media-overlay').classList.remove('open');
+  document.getElementById('m-media-popup').classList.remove('open');
+  setTimeout(() => { document.getElementById('m-media-body').innerHTML = ''; }, 300);
+}
+
+// Patch closeBottomSheet to also clear active item and handle team→menu return
+const _origClose = closeBottomSheet;
+closeBottomSheet = function() {
+  if (_pendingReturnSheet) {
+    const ret = _pendingReturnSheet;
+    _pendingReturnSheet = null;
+    const sheet = document.getElementById('bs-sheet');
+    sheet.classList.remove('open');
+    setTimeout(() => mOpenProjSheet(ret.title, ret.tagline, ret.items, activeProjItem), 420);
+    return;
+  }
+  _origClose();
+  if (activeProjItem) { activeProjItem.classList.remove('proj-active'); activeProjItem = null; }
+};
+
+// ── CONTACT SEND ──
+function mSendContact() {
+  const name = document.getElementById('m-contact-name').value.trim();
+  const email = document.getElementById('m-contact-email').value.trim();
+  const msg = document.getElementById('m-contact-message').value.trim();
+  if (!name || !email || !msg) return;
+  document.getElementById('m-contact-confirm').style.display = 'block';
+  document.getElementById('m-contact-name').value = '';
+  document.getElementById('m-contact-email').value = '';
+  document.getElementById('m-contact-message').value = '';
+  setTimeout(() => { document.getElementById('m-contact-confirm').style.display = 'none'; }, 3000);
+}
+
+// ── BOTTOM SHEET SWIPE DOWN TO CLOSE ──
+(function() {
+  const sheet = document.getElementById('bs-sheet');
+  let startY = 0;
+  sheet.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+  sheet.addEventListener('touchend', e => {
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dy > 60) closeBottomSheet();
+  }, { passive: true });
+})();
+
+// ── CLOCK ──
+function updateClocks() {
+  const now = new Date();
+  const t = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  const lockTime = document.getElementById('lock-time');
+  const homeClock = document.getElementById('home-clock');
+  if (lockTime) lockTime.textContent = t;
+  if (homeClock) homeClock.textContent = t;
+
+  const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+  const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const lockDate = document.getElementById('lock-date');
+  if (lockDate) lockDate.textContent = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate();
+}
+updateClocks();
+setInterval(updateClocks, 10000);
+
+// ── LOCK SCREEN — swipe up or tap ──
+let lockTouchStartY = 0;
+const lockScreen = document.getElementById('lock-screen');
+
+lockScreen.addEventListener('touchstart', e => {
+  lockTouchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+lockScreen.addEventListener('touchend', e => {
+  const dy = lockTouchStartY - e.changedTouches[0].clientY;
+  if (dy > 60) unlock();
+}, { passive: true });
+
+// Also allow tap on the swipe area
+lockScreen.querySelector('.lock-swipe').addEventListener('click', unlock);
+
+function unlock() {
+  if (lockScreen.classList.contains('unlocking')) return;
+  lockScreen.classList.add('unlocking');
+  setTimeout(() => {
+    lockScreen.style.display = 'none';
+    initAfterUnlock();
+  }, 500);
+}
+
+// ── BINARY RAIN (lock screen only) ──
+const lockCanvas = document.getElementById('lock-rain');
+const lockCtx = lockCanvas.getContext('2d');
+let lockRainInterval;
+(function initLockRain() {
+  const fs = 11;
+  function init() {
+    lockCanvas.width = lockCanvas.offsetWidth || window.innerWidth;
+    lockCanvas.height = lockCanvas.offsetHeight || window.innerHeight;
+  }
+  const cols = () => Math.floor(lockCanvas.width / fs);
+  let drops = [];
+  function reset() { drops = Array.from({length: cols()}, () => Math.random() * -60); }
+  function draw() {
+    lockCtx.fillStyle = 'rgba(41,29,20,0.1)';
+    lockCtx.fillRect(0, 0, lockCanvas.width, lockCanvas.height);
+    lockCtx.fillStyle = '#ff33a1';
+    lockCtx.font = fs + 'px VT323, monospace';
+    for (let i = 0; i < drops.length; i++) {
+      lockCtx.fillText(Math.random() > 0.5 ? '1' : '0', i * fs, drops[i] * fs);
+      if (drops[i] * fs > lockCanvas.height && Math.random() > 0.97) drops[i] = 0;
+      drops[i] += 0.35;
+    }
+  }
+  init(); reset();
+  lockRainInterval = setInterval(draw, 150);
+  window.addEventListener('resize', () => { init(); reset(); });
+})();
+
+// ── POST-UNLOCK INIT ──
+function initAfterUnlock() {
+  if (lockRainInterval) { clearInterval(lockRainInterval); lockRainInterval = null; }
+  lockCanvas.width = 0; lockCanvas.height = 0;
+  initHomeRain();
+  initCatStars();
+  loadSoundCloud();
+  initPortfolioPreview();
+}
+
+// ── HOME SCREEN BINARY RAIN ──
+function initHomeRain() {
+  const canvas = document.getElementById('home-rain');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const fs = 11;
+  function resize() {
+    canvas.width = canvas.offsetWidth || window.innerWidth;
+    canvas.height = canvas.offsetHeight || window.innerHeight;
+  }
+  const cols = () => Math.floor(canvas.width / fs);
+  let drops = [];
+  function reset() { drops = Array.from({length: cols()}, () => Math.random() * -60); }
+  function draw() {
+    ctx.fillStyle = 'rgba(41,29,20,0.1)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ff33a1';
+    ctx.font = fs + 'px VT323, monospace';
+    for (let i = 0; i < drops.length; i++) {
+      ctx.fillText(Math.random() > 0.5 ? '1' : '0', i * fs, drops[i] * fs);
+      if (drops[i] * fs > canvas.height && Math.random() > 0.97) drops[i] = 0;
+      drops[i] += 0.35;
+    }
+  }
+  resize(); reset();
+  setInterval(draw, 150);
+  window.addEventListener('resize', () => { resize(); reset(); });
+}
+
+// ── PORTFOLIO PREVIEW WIDGET ──
+const PREVIEW_IMAGES = [
+  'https://i.imgur.com/7L3sM1h.jpeg',
+  'https://i.imgur.com/XcEikom.jpeg',
+  'https://i.imgur.com/MxbgVpV.jpeg',
+  'https://i.imgur.com/CkfeJ0s.jpeg',
+  'https://i.imgur.com/LRq3whC.png',
+  'https://i.imgur.com/WVbk56X.gif',
+  'https://i.imgur.com/RCsnloe.png',
+  'https://i.imgur.com/qEpc8y0.gif',
+  'https://i.imgur.com/gdnumam.gif',
+  'https://i.imgur.com/HPyDsZO.gif',
+  'https://i.imgur.com/alTvnJP.png',
+  'https://i.imgur.com/QBfaKai.gif',
+  'https://i.imgur.com/X63HWac.gif',
+  'https://i.imgur.com/FXjhtPm.gif',
+];
+function initPortfolioPreview() {
+  const inner = document.getElementById('portfolio-preview-inner');
+  if (!inner) return;
+  const textEl = inner.querySelector('.portfolio-preview-text');
+  let currentImg = null;
+  let lastIndex = -1;
+
+  function pickIndex() {
+    let idx;
+    do { idx = Math.floor(Math.random() * PREVIEW_IMAGES.length); } while (idx === lastIndex && PREVIEW_IMAGES.length > 1);
+    lastIndex = idx;
+    return idx;
+  }
+
+  function showImage(src, first) {
+    const img = new Image();
+    img.alt = 'Portfolio preview';
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:0;transition:opacity 0.8s ease;';
+    img.onload = () => {
+      inner.appendChild(img);
+      if (textEl) textEl.style.display = 'none';
+      requestAnimationFrame(() => {
+        img.style.opacity = '1';
+        if (currentImg) {
+          const old = currentImg;
+          setTimeout(() => old.remove(), 900);
+        }
+        currentImg = img;
+      });
+    };
+    img.src = src;
+  }
+
+  showImage(PREVIEW_IMAGES[pickIndex()], true);
+  setInterval(() => showImage(PREVIEW_IMAGES[pickIndex()], false), 1 * 60 * 1000);
+}
+
+// ── APP NAVIGATION ──
+let currentApp = null;
+
+function openApp(name) {
+  if (name === 'socials') {
+    window.open('https://www.instagram.com/dreamweave.design/', '_blank');
+    return;
+  }
+  const page = document.getElementById('page-' + name);
+  if (!page) return;
+  currentApp = name;
+  requestAnimationFrame(() => {
+    page.classList.add('open');
+  });
+}
+
+function closeApp(name) {
+  const page = document.getElementById('page-' + name);
+  if (!page) return;
+  page.classList.remove('open');
+  currentApp = null;
+}
+
+// Back gesture / swipe down to close
+// Excluded elements: paint canvas, solitaire board (they use touch themselves)
+const SWIPE_CLOSE_EXCLUDE = ['m-paint-canvas', 'm-sol-board', 'm-paint-toolbar', 'm-paint-palette', 'm-paint-canvas-wrap'];
+document.querySelectorAll('.app-page').forEach(page => {
+  let startY = 0;
+  page.addEventListener('touchstart', e => {
+    const target = e.target;
+    if (SWIPE_CLOSE_EXCLUDE.some(id => target.closest('#' + id))) {
+      startY = -1; return;
+    }
+    if (page.querySelector('.app-page-body').scrollTop === 0) {
+      startY = e.touches[0].clientY;
+    } else {
+      startY = -1;
+    }
+  }, { passive: true });
+  page.addEventListener('touchend', e => {
+    if (startY < 0) return;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dy > 100) {
+      const name = page.id.replace('page-', '');
+      closeApp(name);
+    }
+  }, { passive: true });
+});
+
+// ── BOTTOM SHEET ──
+function openBottomSheet(title, items) {
+  document.getElementById('bs-title').textContent = title;
+  const content = document.getElementById('bs-content');
+  content.innerHTML = '';
+  items.forEach(item => {
+    const btn = document.createElement('div');
+    btn.className = 'bottom-sheet-btn';
+    btn.textContent = '✦ ' + item.label;
+    btn.onclick = () => {
+      closeBottomSheet();
+      if (item.action) item.action();
+    };
+    content.appendChild(btn);
+  });
+  requestAnimationFrame(() => {
+    document.getElementById('bs-overlay').classList.add('open');
+    document.getElementById('bs-sheet').classList.add('open');
+  });
+}
+
+function closeBottomSheet() {
+  document.getElementById('bs-overlay').classList.remove('open');
+  document.getElementById('bs-sheet').classList.remove('open');
+}
+
+// ── CAT MEOW + POPUP ──
+const meowSound = new Audio('https://res.cloudinary.com/djol50py3/video/upload/v1773203470/meowwww_msxyxs.mp3');
+
+function catMeow() {
+  meowSound.currentTime = 0;
+  meowSound.play();
+  const popup = document.getElementById('cat-popup');
+  if (popup.classList.contains('show')) return;
+  popup.style.display = 'flex';
+  requestAnimationFrame(() => popup.classList.add('show'));
+}
+
+function closeCatPopup() {
+  const popup = document.getElementById('cat-popup');
+  popup.classList.remove('show');
+  setTimeout(() => { popup.style.display = 'none'; }, 250);
+}
+
+function openSonjaPopup() {
+  const popup = document.getElementById('sonja-popup');
+  const overlay = document.getElementById('sonja-popup-overlay');
+  overlay.classList.add('show');
+  popup.style.display = 'flex';
+  requestAnimationFrame(() => popup.classList.add('show'));
+}
+
+function closeSonjaPopup() {
+  const popup = document.getElementById('sonja-popup');
+  const overlay = document.getElementById('sonja-popup-overlay');
+  popup.classList.remove('show');
+  overlay.classList.remove('show');
+  setTimeout(() => { popup.style.display = 'none'; }, 250);
+}
+
+// ── CAT ORBITING STARS ──
+function initCatStars() {
+  const canvas = document.getElementById('m-cat-stars');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const widget = canvas.parentElement;
+  canvas.width = widget.offsetWidth;
+  canvas.height = widget.offsetHeight;
+
+  const NUM = 8;
+  const stars = [];
+  for (let i = 0; i < NUM; i++) {
+    stars.push({
+      angle: (Math.PI * 2 / NUM) * i,
+      radiusX: 30 + Math.random() * 35,
+      radiusY: 15 + Math.random() * 20,
+      speed: 0.008 + Math.random() * 0.006,
+      alpha: 0.4 + Math.random() * 0.4,
+      size: Math.random() > 0.5 ? 3 : 2,
+      drift: Math.random() * Math.PI * 2
+    });
+  }
+
+  let lastDraw = 0;
+  function draw(ts) {
+    requestAnimationFrame(draw);
+    if (ts - lastDraw < 80) return;
+    lastDraw = ts;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const s of stars) {
+      s.angle += s.speed * 2.5;
+      s.drift += 0.005;
+      const x = cx + Math.cos(s.angle) * s.radiusX;
+      const y = cy + Math.sin(s.angle) * s.radiusY + Math.sin(s.drift) * 4;
+      const flicker = 0.7 + 0.3 * Math.sin(s.angle * 3);
+      ctx.globalAlpha = s.alpha * flicker;
+      ctx.shadowColor = '#ff33a1';
+      ctx.shadowBlur = s.size * 3;
+      ctx.fillStyle = '#ff33a1';
+      ctx.fillRect(x - 1, y - 1, s.size, s.size);
+    }
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+  }
+  requestAnimationFrame(draw);
+}
+
+// ── SOUNDCLOUD ──
+let mScWidget, mScPlaying = false;
+const SC_URL = 'https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/dreamweavestudio/sets/dreamweave&color=%23ff33a1&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false';
+
+function loadSoundCloud() {
+  const iframe = document.getElementById('m-sc-iframe');
+  iframe.src = SC_URL;
+  const tag = document.createElement('script');
+  tag.src = 'https://w.soundcloud.com/player/api.js';
+  tag.onload = () => {
+    iframe.addEventListener('load', () => {
+      mScWidget = SC.Widget(iframe);
+      mScWidget.bind(SC.Widget.Events.READY, () => {
+        mScWidget.setVolume(80);
+        mUpdateTitle();
+      });
+      mScWidget.bind(SC.Widget.Events.PLAY, () => {
+        mScPlaying = true;
+        document.getElementById('m-play-btn').textContent = '||';
+        mUpdateTitle();
+      });
+      mScWidget.bind(SC.Widget.Events.PAUSE, () => {
+        mScPlaying = false;
+        document.getElementById('m-play-btn').textContent = '▶';
+      });
+      mScWidget.bind(SC.Widget.Events.PLAY_PROGRESS, obj => {
+        mScWidget.getDuration(d => {
+          document.getElementById('m-player-fill').style.width = ((obj.currentPosition / d) * 100) + '%';
+        });
+      });
+      mScWidget.bind(SC.Widget.Events.FINISH, () => {
+        mScWidget.next();
+        setTimeout(() => {
+          mScWidget.seekTo(0); mScWidget.play();
+          mScPlaying = true;
+          document.getElementById('m-play-btn').textContent = '||';
+          document.getElementById('m-player-fill').style.width = '0%';
+          mUpdateTitle();
+        }, 300);
+      });
+    }, { once: true });
+  };
+  document.head.appendChild(tag);
+}
+
+function mUpdateTitle() {
+  if (!mScWidget) return;
+  mScWidget.getCurrentSound(sound => {
+    if (!sound) return;
+    const title = (sound.title || 'UNKNOWN').toUpperCase();
+    const artist = (sound.user?.username || '').toUpperCase();
+    document.getElementById('m-player-title').textContent = artist ? title + ' — ' + artist : title;
+  });
+}
+
+function mScToggle() { if (mScWidget) mScPlaying ? mScWidget.pause() : mScWidget.play(); }
+function mScPrev() {
+  if (!mScWidget) return;
+  const was = mScPlaying;
+  mScWidget.prev();
+  setTimeout(() => { mScWidget.seekTo(0); mUpdateTitle(); if (!was) mScWidget.pause(); }, 300);
+}
+function mScNext() {
+  if (!mScWidget) return;
+  const was = mScPlaying;
+  mScWidget.next();
+  setTimeout(() => { mScWidget.seekTo(0); mUpdateTitle(); if (!was) mScWidget.pause(); }, 300);
+}
+
+// ── ARCHIVE ──
+const ARCHIVE_DATA = {
+  name: 'ARCHIVE',
+  folders: [
+    { name: 'NECTAR NYMPH', items: [
+      { name: '@NECTAR.NYMPH', type: 'link', url: 'https://www.instagram.com/nectar.nymph/' },
+      { name: 'LOGO1', type: 'image', url: 'https://i.imgur.com/pnEqLrV.jpeg' },
+      { name: 'LOGO2', type: 'image', url: 'https://i.imgur.com/4ND4dcw.jpeg' },
+    ] },
+    { name: 'C4D ART', items: [
+      { name: 'ANIMATIONS', type: 'folder', items: [
+        { name: 'BRAIN BUST', type: 'image', url: 'https://i.imgur.com/XrLxVL6.gif' },
+        { name: 'ITT GIRL', type: 'image', url: 'https://i.imgur.com/xyNifVo.gif' },
+        { name: 'FOUNTAIN', type: 'image', url: 'https://i.imgur.com/FSSEqw9.gif' },
+        { name: 'WAVE POOL', type: 'image', url: 'https://i.imgur.com/sOIelZY.gif' },
+        { name: 'PEEL OUT', type: 'image', url: 'https://i.imgur.com/ApbWvLy.gif' },
+        { name: 'BALL DROP', type: 'image', url: 'https://i.imgur.com/6FcO3Ju.gif' },
+        { name: 'BALL OUT', type: 'image', url: 'https://i.imgur.com/u0FDaYU.gif' },
+        { name: 'GRAPE JUICE', type: 'image', url: 'https://i.imgur.com/H1cPIpE.gif' },
+      ] },
+      { name: 'STILLS', type: 'folder', items: [
+        { name: 'POOLBOY', type: 'image', url: 'https://i.imgur.com/lyFWFBC.png' },
+        { name: 'NIGHTCLUB', type: 'image', url: 'https://i.imgur.com/JMTVyc7.png' },
+        { name: 'LAVA LAMP', type: 'image', url: 'https://i.imgur.com/gfvsh2m.png' },
+        { name: 'FLOCK', type: 'image', url: 'https://i.imgur.com/EfLZ2GG.png' },
+        { name: 'CANDY SHOP', type: 'image', url: 'https://i.imgur.com/gzzYbhU.png' },
+        { name: 'STRAWBERRY', type: 'image', url: 'https://i.imgur.com/JimIcNL.png' },
+        { name: 'KEEP ME SAFE', type: 'image', url: 'https://i.imgur.com/aSv4IKB.png' },
+        { name: 'SACRED', type: 'image', url: 'https://i.imgur.com/zbuwql0.png' },
+        { name: 'SOUR', type: 'image', url: 'https://i.imgur.com/VHZAbbv.png' },
+        { name: 'PLANET SULLIZOID', type: 'image', url: 'https://i.imgur.com/TMkbcYh.png' },
+        { name: 'TELEPHONE', type: 'image', url: 'https://i.imgur.com/i5xcwug.png' },
+        { name: 'UFO', type: 'image', url: 'https://i.imgur.com/Qc0JOTJ.png' },
+        { name: 'MARSHMALLOW SUMMER', type: 'image', url: 'https://i.imgur.com/ti43xb4.png' },
+      ] },
+    ] },
+    { name: 'PROCREATE', items: [
+      { name: 'MULTITASKERS', type: 'folder', items: [
+        { name: 'BAR STAR', type: 'image', url: 'https://i.imgur.com/gPl6GfV.png' },
+        { name: '100% THAT WITCH', type: 'image', url: 'https://i.imgur.com/EahOC3x.jpeg' },
+        { name: 'BOSS STITCH', type: 'image', url: 'https://i.imgur.com/GnteJpo.jpeg' },
+        { name: 'GARDEN HOE', type: 'image', url: 'https://i.imgur.com/LiaG0Oh.jpeg' },
+        { name: 'LITTLE BRAT', type: 'image', url: 'https://i.imgur.com/0k7yQmY.jpeg' },
+        { name: 'SUGAR MAMA', type: 'image', url: 'https://i.imgur.com/VVmbbJq.jpeg' },
+      ] },
+      { name: 'SLUTTY FROGS', type: 'image', url: 'https://i.imgur.com/XzxtUHu.png' },
+      { name: 'HOMEBODY', type: 'image', url: 'https://i.imgur.com/8pvBbHn.jpeg' },
+      { name: 'POUT', type: 'image', url: 'https://i.imgur.com/ZOvBIfQ.jpeg' },
+      { name: 'SAILOR MOON', type: 'image', url: 'https://i.imgur.com/cJ5c2NT.jpeg' },
+      { name: 'BLUE', type: 'image', url: 'https://i.imgur.com/bzygBV1.jpeg' },
+      { name: 'KAGOME', type: 'image', url: 'https://i.imgur.com/dqth0tT.jpeg' },
+      { name: 'THIRD EYE', type: 'image', url: 'https://i.imgur.com/zZ23EJO.jpeg' },
+      { name: 'MERIGEM LOGO', type: 'image', url: 'https://i.imgur.com/5mPTndt.jpeg' },
+      { name: 'CHERRY', type: 'image', url: 'https://i.imgur.com/wB2ZAFk.jpeg' },
+      { name: 'FRUIT DREAM', type: 'image', url: 'https://i.imgur.com/2OHvnfx.jpeg' },
+      { name: 'FIGURE 8', type: 'image', url: 'https://i.imgur.com/nHxfDsl.jpeg' },
+      { name: 'SAILOR MOON WIP', type: 'image', url: 'https://i.imgur.com/r8XosRo.png' },
+      { name: 'FKA x MONONOKE', type: 'image', url: 'https://i.imgur.com/rXhR1di.jpeg' },
+      { name: 'CALL ME SUGAR', type: 'image', url: 'https://i.imgur.com/BHRSuWQ.jpeg' },
+    ] },
+    { name: 'POEMS', items: [
+      { name: 'FLOWERS IN THE VASE', type: 'poem', date: '07/29/2025', content: `My mind is a shattered vase\nBroken in pieces\nStuck in its ways\n\nI am the bouquet on the floor\nAs each day passes\nI dry out some more\n\nYou reach out to clean up the mess\nYou knocked it over\nYou tried your best\n\nYou recoil after cutting your hand\nThe edges are sharp\nOn the borderland\n\nI lay there thirsty for water\nI begin to forget\nI'm a sister and daughter\n\nEach day you return to the vase\nThe broken shards continue\nTheir broken hostile ways\n\nThe flowers remain as they lay\nThirsty and headed\nFor certain decay\n\nYou leave it alone for a while\nYou draw a line\nAround the pile\n\nThe line makes it all the more clear\nWarning! Danger!\nDo not go near.\n\n"Its too dangerous" they all start to say,\nThe glass cuts\nSo the flowers must stay\n\nIt's okay that you didn't save the flowers\nThere's no value now\nThey've been there for hours\n\nSo you sweep it all up with a broom and pan\nFlowers and shards\nHand in hand.` },
+      { name: 'LITTLE HOUSE', type: 'poem', date: '', content: `So here I am at the door\nOf my house of anger and sadness\nTrying to figure out the locks\nTo let out the impending madness\nThe neighbours whisper amongst themselves,\n"How badly kept a home"\nIt's not me! It's not me!\nI swear it is a ghost!\nI swear I am not like this, I swear I mow my lawn\nI swear I always take out the trash\nBut my anger lingers on.` },
+      { name: 'TOMORROW', type: 'poem', date: '', content: `"Tomorrow will be the first day of my life"\nI tell myself as I nestle into bed, trying again to find that\nRelief, like taking your heels off after a night out,\nI swear I have felt it before -\nAnd today I may have returned again to my familiar habits\nThe ones that pull my mind out of my body and let me just\nFloat\nBy\nTomorrow I will\nUse the meditation app\nDo the YouTube yoga\nComplete the checklist\n"Have peaceful, linear thoughts" I chuckle,\nAdd that in for good measure\nMaybe tomorrow I will finally choose myself over temporary pleasure\nI tend and cultivate this dissonance of reality with pride\nAs long as I want to heal, I will,\nRight?\nRight?\nRight?\nOkay. Tomorrow will be the first day of my life.` },
+      { name: "I'VE LOST THE KEY", type: 'poem', date: '', content: `Behind the lock\nThere's me.\nThe door is reinforced darkness,\nand I've lost the key.\n\nThe key is somewhere on the floor\nI search on my hands and knees.\nI squint through a fog of anger,\nI'm desperate for the key.\n\nI'm not the only one pounding\nAt the door that locks away me\nAll my lovers and friends\nAre looking for the key.\n\nAnd once we find that metallic access,\nTaste the me on my tongue;\nI hope you hold onto the truths\nThat my freedom defiantly sung.` },
+      { name: 'THE PLACE', type: 'poem', date: '07/23/2021', content: `Please show me the place\nwhere my pain is safe to stay\nI left it in my body, but it left me hollow and decayed\nI left it in my bedroom,\nwhere it has certainly overstayed\nI left some with my therapist, but only if she's paid\nI tried to show it to my friends but it's too much they say\nI left some of it with lovers, and they left some of theirs with me\nbut then that's just called trauma bonding\nand those trades aren't interest free\n\nRight now it lives in the space between living and the dead\nMy body's here, the TV's on, but nothing in my head\nI'll just sit like this for hours, the pain hovering above\nI'll distract myself with reality shows\nof shallow people looking for love\nIf I don't look directly at it, it's like it's not even there\nSo long as I live my life rather lifeless, dissociating in this chair.` },
+      { name: 'SOFTEN YOUR BELLY', type: 'poem', date: '11/30/2023', content: `I've been given permission\nTo soften my belly\nThere is space\nFor its undulations\nAs expansive as it requires\nAnd as it sighs\nIn lazy, unhurried rhythms\nIt signals to the rest of my wholeness\n"Spirit, you can speak up now,\nNerves, at ease,\nMind, wander where you need\nOr even, where you please.\nYour alienness is inalienable\nFor you've made yourself\nA loving home."` },
+      { name: 'WET FLOOR', type: 'poem', date: '', content: `Don't tell me that this is the best it can be\nI need that hope to keep me free\nI need my anger to spill out onto something\nI need my anger to spill out onto something\nHold me close hold me together\nI need an anchor I need a tether\nWatch your step\nThe floor is wet\nThe anger spills out of me` },
+      { name: '4 AM', type: 'poem', date: '', content: `4 am new years day\noutside, friends and lovers full of\nchampagne and hope\nshuffle gleefully towards their abodes\ninside, by sizeable contrast\nyou tell me you think it's over\nno, you know.\nI don't need\nmakeup wipes, I've got my tears to remove the champagne glitter from swollen lids\ninsanity intact I place my bids\ndon't leave me\ndon't leave me\ndon't leave me\nI let my hope weave around your heart like a fool` },
+    ] },
+    { name: 'ART SCHOOL', items: [
+      { name: 'CAT GESTURES', type: 'image', url: 'https://i.imgur.com/NBuVrgs.png' },
+      { name: 'CAT SHAPES', type: 'image', url: 'https://i.imgur.com/XvskZYO.png' },
+      { name: 'CAT SKELETAL', type: 'image', url: 'https://i.imgur.com/0kseYNm.png' },
+      { name: 'UNICORN', type: 'image', url: 'https://i.imgur.com/SS3vJCS.png' },
+      { name: 'SPACE BABE', type: 'image', url: 'https://i.imgur.com/vWVZvE7.png' },
+      { name: 'MAD SCIENTIST', type: 'image', url: 'https://i.imgur.com/UuslZxp.png' },
+      { name: 'CARICATURES', type: 'image', url: 'https://i.imgur.com/lHrww3f.png' },
+      { name: 'PEACH PASTELS', type: 'image', url: 'https://i.imgur.com/vixJ6ex.png' },
+      { name: 'NUDE STUDY', type: 'image', url: 'https://i.imgur.com/PFlZRjL.png' },
+    ] },
+  ]
+};
+
+let mArchivePath = [];
+
+function mGetArchiveFolder(path) {
+  let cur = ARCHIVE_DATA;
+  for (const idx of path) {
+    const items = cur.folders || cur.items;
+    cur = items[idx];
+  }
+  return cur;
+}
+
+function mRenderArchive() {
+  const grid = document.getElementById('m-archive-grid');
+  const crumb = document.getElementById('m-archive-breadcrumb');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  // Breadcrumb
+  if (mArchivePath.length === 0) {
+    crumb.innerHTML = '<span style="filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5)">📂</span> ARCHIVE';
+    const folders = ARCHIVE_DATA.folders;
+    folders.forEach((folder, idx) => {
+      const el = document.createElement('div');
+      el.className = 'm-archive-item';
+      el.innerHTML = '<div class="m-archive-icon">📁</div><div class="m-archive-name">' + folder.name + '</div>';
+      el.onclick = () => { mArchivePath = [idx]; mRenderArchive(); };
+      grid.appendChild(el);
+    });
+  } else {
+    // Build breadcrumb
+    let html = '<span class="clickable" onclick="mArchivePath=[];mRenderArchive();"><span style="filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5)">📂</span> ARCHIVE</span>';
+    for (let i = 0; i < mArchivePath.length; i++) {
+      const f = mGetArchiveFolder(mArchivePath.slice(0, i + 1));
+      if (i < mArchivePath.length - 1) {
+        const snap = JSON.stringify(mArchivePath.slice(0, i + 1));
+        html += ' / <span class="clickable" onclick=\'mArchivePath=' + snap + ';mRenderArchive();\'>' + f.name + '</span>';
+      } else {
+        html += ' / ' + f.name;
+      }
+    }
+    crumb.innerHTML = html;
+
+    const folder = mGetArchiveFolder(mArchivePath);
+    const items = folder.items || [];
+    if (items.length === 0) {
+      grid.innerHTML = '<div style="padding:30px;text-align:center;color:var(--pink-dim);font-family:var(--font);font-size:13px;letter-spacing:1.5px;grid-column:1/-1;">COMING SOON :)</div>';
+      return;
+    }
+    items.forEach((item, idx) => {
+      const el = document.createElement('div');
+      el.className = 'm-archive-item';
+      const icon = item.type === 'folder' ? '📁' : item.type === 'poem' ? '📄' : item.type === 'link' ? '🔗' : '🖼';
+      el.innerHTML = '<div class="m-archive-icon">' + icon + '</div><div class="m-archive-name">' + item.name + '</div>';
+      if (item.type === 'folder') {
+        el.onclick = () => { mArchivePath = [...mArchivePath, idx]; mRenderArchive(); };
+      } else if (item.type === 'poem') {
+        el.onclick = () => mOpenNotepad(item);
+      } else if (item.type === 'link') {
+        el.onclick = () => window.open(item.url, '_blank');
+      } else if (item.url) {
+        el.onclick = () => mOpenMediaViewer(item.name, item.url);
+      }
+      grid.appendChild(el);
+    });
+  }
+}
+
+function mArchiveBack() {
+  if (mArchivePath.length === 0) {
+    closeApp('archive');
+  } else {
+    mArchivePath.pop();
+    mRenderArchive();
+  }
+}
+function mOpenNotepad(item) {
+  document.getElementById('m-notepad-title').textContent = item.name + '.TXT';
+  document.getElementById('m-notepad-date').textContent = item.date || '';
+  document.getElementById('m-notepad-body').textContent = item.content;
+  document.getElementById('m-notepad-overlay').classList.add('open');
+  document.getElementById('m-notepad').classList.add('open');
+}
+function mCloseNotepad() {
+  document.getElementById('m-notepad-overlay').classList.remove('open');
+  document.getElementById('m-notepad').classList.remove('open');
+}
+
+// Swipe down to close notepad
+(function() {
+  let startY = 0;
+  const np = document.getElementById('m-notepad');
+  np.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+  np.addEventListener('touchend', e => {
+    const body = document.getElementById('m-notepad-body');
+    if (body.scrollTop > 0) return;
+    if (e.changedTouches[0].clientY - startY > 80) mCloseNotepad();
+  }, { passive: true });
+})();
+
+// Swipe down to close media popup
+(function() {
+  let startY = 0;
+  const mp = document.getElementById('m-media-popup');
+  mp.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+  mp.addEventListener('touchend', e => {
+    const body = document.getElementById('m-media-body');
+    if (body.scrollTop > 0) return;
+    if (e.changedTouches[0].clientY - startY > 80) mCloseMediaViewer();
+  }, { passive: true });
+})();
+
+// Init archive when opened
+const _mOpenAppOrig = openApp;
+openApp = function(name) {
+  _mOpenAppOrig(name);
+  if (name === 'archive') { mArchivePath = []; mRenderArchive(); }
+  if (name === 'paint') { setTimeout(() => { mInitPaint(); mResizePaintCanvas(); }, 80); setTimeout(() => {
+    const tb = document.getElementById('m-paint-toolbar'), pl = document.getElementById('m-paint-palette');
+    const fl = document.getElementById('m-toolbar-fade-left'), fr = document.getElementById('m-toolbar-fade-right');
+    const pfl = document.getElementById('m-palette-fade-left'), pfr = document.getElementById('m-palette-fade-right');
+    if (tb && fr) fr.style.opacity = tb.scrollWidth > tb.clientWidth ? '1' : '0';
+    if (pl && pfr) pfr.style.opacity = pl.scrollWidth > pl.clientWidth ? '1' : '0';
+    if (fl) fl.style.opacity = '0';
+    if (pfl) pfl.style.opacity = '0';
+  }, 250); }
+  if (name === 'solitaire' && MSOL.tableau[0].length === 0) mSolNewGame();
+};
+
+// ── PAINT ──
+const mPaintPalette = [
+  '#ff33a1','#ff80cc','#ffb3e0','#ff0066','#cc0055',
+  '#ffffff','#cccccc','#888888','#444444','#100805',
+  '#ff6633','#ff9900','#ffcc00','#ccff00','#00ff99',
+  '#00ccff','#0066ff','#6600ff','#cc33ff','#ff33cc',
+  '#8B0000','#006633','#003366','#330066','#4a1a00',
+];
+
+let mPaintTool = 'pencil', mPaintSize = 1, mPaintColour = '#ff33a1';
+let mPaintDrawing = false, mPaintLastX = null, mPaintLastY = null, mPaintSnapshot = null;
+
+function mInitPaint() {
+  const pal = document.getElementById('m-paint-palette');
+  if (!pal || pal.children.length > 0) return;
+  const canvas = document.getElementById('m-paint-canvas');
+  mPaintPalette.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'm-paint-swatch';
+    sw.style.background = c;
+    sw.onclick = () => { mPaintColour = c; mUpdatePaintUI(); };
+    pal.appendChild(sw);
+  });
+  mResizePaintCanvas();
+
+  // Dynamic scroll fades for toolbar and palette
+  function mPaintUpdateFades(el, leftId, rightId) {
+    const atLeft  = el.scrollLeft <= 2;
+    const atRight = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
+    document.getElementById(leftId).style.opacity  = atLeft  ? '0' : '1';
+    document.getElementById(rightId).style.opacity = atRight ? '0' : '1';
+  }
+  const toolbar = document.getElementById('m-paint-toolbar');
+  const palette = document.getElementById('m-paint-palette');
+  // Scroll listeners update fades dynamically
+  if (toolbar) toolbar.addEventListener('scroll', () => mPaintUpdateFades(toolbar, 'm-toolbar-fade-left', 'm-toolbar-fade-right'), {passive:true});
+  if (palette) palette.addEventListener('scroll', () => mPaintUpdateFades(palette, 'm-palette-fade-left', 'm-palette-fade-right'), {passive:true});
+  if (!canvas) return;
+  canvas.addEventListener('mousedown', mPaintStart);
+  canvas.addEventListener('touchstart', mPaintStart, {passive:false});
+  canvas.addEventListener('touchend', mPaintEnd);
+  // touchmove on document but only fires draw when actively painting (started on canvas)
+  // uses passive:false only when drawing so we can preventDefault — otherwise lets toolbar/palette scroll
+  document.addEventListener('touchmove', e => {
+    if (!mPaintDrawing) return;
+    mPaintDraw(e);
+  }, {passive:false});
+  document.addEventListener('mousemove', e => { if (mPaintDrawing) mPaintDraw(e); });
+  document.addEventListener('mouseup', mPaintEnd);
+  document.addEventListener('touchend', e => { if (mPaintDrawing) mPaintEnd(); });
+}
+
+function mResizePaintCanvas() {
+  const canvas = document.getElementById('m-paint-canvas');
+  const wrap = document.getElementById('m-paint-canvas-wrap');
+  if (!canvas || !wrap) return;
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  if (w < 10 || h < 10) return;
+  const tmp = document.createElement('canvas');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  tmp.getContext('2d').drawImage(canvas, 0, 0);
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#100805'; ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(tmp, 0, 0);
+}
+
+function mSetPaintTool(tool) {
+  mPaintTool = tool;
+  document.querySelectorAll('.m-pt-tool').forEach(t => t.classList.remove('active-tool'));
+  const el = document.getElementById('m-tool-' + tool);
+  if (el) el.classList.add('active-tool');
+  const lbl = document.getElementById('m-paint-tool-label');
+  if (lbl) lbl.textContent = tool.toUpperCase();
+}
+
+function mSetPaintSize(s) {
+  mPaintSize = s;
+  document.querySelectorAll('.m-pt-size').forEach(el => el.classList.remove('active-size'));
+  const el = document.getElementById('m-size-' + s);
+  if (el) el.classList.add('active-size');
+}
+
+function mUpdatePaintUI() {
+  const ac = document.getElementById('m-paint-active-colour');
+  const hex = document.getElementById('m-paint-colour-hex');
+  if (ac) ac.style.background = mPaintColour;
+  if (hex) hex.textContent = mPaintColour.toUpperCase();
+}
+
+function mPaintGetPos(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  const src = e.touches ? e.touches[0] : e;
+  return { x: Math.floor(src.clientX - r.left), y: Math.floor(src.clientY - r.top) };
+}
+
+function mPaintFill(ctx, x, y, fillColour, w, h) {
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+  const idx = (y * w + x) * 4;
+  const tr = data[idx], tg = data[idx+1], tb = data[idx+2], ta = data[idx+3];
+  const fc = mHexToRgb(fillColour);
+  if (tr === fc.r && tg === fc.g && tb === fc.b) return;
+  const stack = [[x, y]];
+  while (stack.length) {
+    const [cx, cy] = stack.pop();
+    if (cx < 0 || cx >= w || cy < 0 || cy >= h) continue;
+    const i = (cy * w + cx) * 4;
+    if (data[i] !== tr || data[i+1] !== tg || data[i+2] !== tb || data[i+3] !== ta) continue;
+    data[i] = fc.r; data[i+1] = fc.g; data[i+2] = fc.b; data[i+3] = 255;
+    stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function mHexToRgb(hex) {
+  return { r: parseInt(hex.slice(1,3),16), g: parseInt(hex.slice(3,5),16), b: parseInt(hex.slice(5,7),16) };
+}
+function mRgbToHex(r,g,b) {
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+
+function mPaintStart(e) {
+  e.preventDefault();
+  const canvas = document.getElementById('m-paint-canvas');
+  const ctx = canvas.getContext('2d');
+  const {x, y} = mPaintGetPos(e, canvas);
+  if (mPaintTool === 'fill') { mPaintFill(ctx, x, y, mPaintColour, canvas.width, canvas.height); return; }
+  if (mPaintTool === 'eyedropper') {
+    const px = ctx.getImageData(x, y, 1, 1).data;
+    mPaintColour = mRgbToHex(px[0], px[1], px[2]);
+    mUpdatePaintUI(); mSetPaintTool('pencil'); return;
+  }
+  mPaintDrawing = true;
+  mPaintLastX = x; mPaintLastY = y;
+  if (mPaintTool === 'line' || mPaintTool === 'rect') mPaintSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  mPaintDraw(e);
+}
+
+function mPaintDraw(e) {
+  if (!mPaintDrawing) return;
+  e.preventDefault();
+  const canvas = document.getElementById('m-paint-canvas');
+  const ctx = canvas.getContext('2d');
+  const {x, y} = mPaintGetPos(e, canvas);
+  if (mPaintTool === 'pencil' || mPaintTool === 'eraser') {
+    ctx.globalCompositeOperation = mPaintTool === 'eraser' ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = mPaintColour; ctx.lineWidth = mPaintSize; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    if (mPaintLastX !== null) { ctx.moveTo(mPaintLastX, mPaintLastY); ctx.lineTo(x, y); }
+    else { ctx.moveTo(x, y); ctx.lineTo(x, y); }
+    ctx.stroke(); ctx.globalCompositeOperation = 'source-over';
+    mPaintLastX = x; mPaintLastY = y;
+  } else if (mPaintTool === 'glow') {
+    const lx = mPaintLastX !== null ? mPaintLastX : x, ly = mPaintLastY !== null ? mPaintLastY : y;
+    const dist = Math.sqrt((x-lx)**2+(y-ly)**2), steps = Math.max(1, Math.ceil(dist/3));
+    for (let s = 0; s <= steps; s++) {
+      const px = lx+(x-lx)*(s/steps), py = ly+(y-ly)*(s/steps), r = mPaintSize * 6;
+      const grad = ctx.createRadialGradient(px,py,0,px,py,r*2);
+      grad.addColorStop(0, mPaintColour+'cc'); grad.addColorStop(0.2, mPaintColour+'66');
+      grad.addColorStop(0.6, mPaintColour+'22'); grad.addColorStop(1, mPaintColour+'00');
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(px,py,r*2,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ffffff44'; ctx.beginPath(); ctx.arc(px,py,Math.max(1,mPaintSize*0.5),0,Math.PI*2); ctx.fill();
+    }
+    mPaintLastX = x; mPaintLastY = y;
+  } else if (mPaintTool === 'spray') {
+    const density = 30, radius = mPaintSize * 8;
+    for (let i = 0; i < density; i++) {
+      const angle = Math.random()*Math.PI*2, d = Math.random()*radius;
+      ctx.fillStyle = mPaintColour; ctx.globalAlpha = Math.random()*0.6+0.1;
+      ctx.beginPath(); ctx.arc(x+Math.cos(angle)*d, y+Math.sin(angle)*d, Math.random()*1.2, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1; mPaintLastX = x; mPaintLastY = y;
+  } else if (mPaintTool === 'line' || mPaintTool === 'rect') {
+    if (mPaintSnapshot) ctx.putImageData(mPaintSnapshot, 0, 0);
+    ctx.strokeStyle = mPaintColour; ctx.lineWidth = mPaintSize; ctx.lineCap = 'round';
+    if (mPaintTool === 'line') { ctx.beginPath(); ctx.moveTo(mPaintLastX, mPaintLastY); ctx.lineTo(x, y); ctx.stroke(); }
+    else { ctx.strokeRect(mPaintLastX, mPaintLastY, x-mPaintLastX, y-mPaintLastY); }
+  }
+}
+
+function mPaintEnd() { mPaintDrawing = false; mPaintLastX = null; mPaintLastY = null; mPaintSnapshot = null; }
+
+function mPaintClear() {
+  const canvas = document.getElementById('m-paint-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#100805'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function mPaintSave() {
+  const canvas = document.getElementById('m-paint-canvas');
+  const a = document.createElement('a');
+  a.download = 'dreamweave-paint.png'; a.href = canvas.toDataURL(); a.click();
+}
+
+// Init paint palette on load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mInitPaint);
+} else {
+  mInitPaint();
+}
+
+// ── SOLITAIRE ──
+const MSOL = {
+  SUITS: ['♠','♣','♥','♦'], RANKS: ['A','2','3','4','5','6','7','8','9','10','J','Q','K'],
+  RED: ['♥','♦'],
+  stock: [], waste: [], foundations: [[],[],[],[]], tableau: [[],[],[],[],[],[],[]],
+  selected: null, // { source, col, idx, cards }
+};
+
+function mSolIsRed(suit) { return MSOL.RED.includes(suit); }
+function mSolRankIdx(r) { return MSOL.RANKS.indexOf(r); }
+
+function mSolNewDeck() {
+  const d = [];
+  for (const s of MSOL.SUITS) for (const r of MSOL.RANKS) d.push({suit:s,rank:r,faceUp:false});
+  for (let i = d.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+  return d;
+}
+
+function mSolNewGame() {
+  const deck = mSolNewDeck();
+  MSOL.stock = []; MSOL.waste = []; MSOL.foundations = [[],[],[],[]]; MSOL.tableau = [[],[],[],[],[],[],[]]; MSOL.selected = null;
+  let idx = 0;
+  for (let col = 0; col < 7; col++) for (let row = 0; row <= col; row++) { const c = deck[idx++]; c.faceUp = (row === col); MSOL.tableau[col].push(c); }
+  while (idx < deck.length) MSOL.stock.push(deck[idx++]);
+  const msg = document.getElementById('m-sol-msg');
+  if (msg) msg.textContent = '';
+  mSolRender();
+}
+
+function mSolCanStack(card, onCard) {
+  if (!onCard) return card.rank === 'K';
+  if (!onCard.faceUp) return false;
+  return mSolIsRed(card.suit) !== mSolIsRed(onCard.suit) && mSolRankIdx(card.rank) === mSolRankIdx(onCard.rank) - 1;
+}
+function mSolCanFoundation(card, pile) {
+  if (pile.length === 0) return card.rank === 'A';
+  const top = pile[pile.length-1];
+  return card.suit === top.suit && mSolRankIdx(card.rank) === mSolRankIdx(top.rank) + 1;
+}
+function mSolCheckWin() {
+  if (MSOL.foundations.every(f => f.length === 13)) {
+    const msg = document.getElementById('m-sol-msg');
+    if (msg) msg.textContent = '✦ YOU WIN! ✦';
+  }
+}
+
+function mSolDrawFromStock() {
+  MSOL.selected = null;
+  if (MSOL.stock.length === 0) {
+    MSOL.stock = MSOL.waste.slice().reverse().map(c => ({...c, faceUp:false}));
+    MSOL.waste = [];
+  } else {
+    const card = MSOL.stock.pop(); card.faceUp = true; MSOL.waste.push(card);
+  }
+  mSolRender();
+}
+
+function mSolRemoveFrom(source, col, idx) {
+  if (source === 'waste') MSOL.waste.pop();
+  else MSOL.tableau[col].splice(idx);
+}
+
+// Tap-to-select/move (mobile-friendly, no drag needed)
+function mSolTapCard(source, col, idx) {
+  if (MSOL.selected) {
+    const sel = MSOL.selected;
+    // Try to place selected cards
+    if (source === 'foundation' && sel.cards.length === 1) {
+      if (mSolCanFoundation(sel.cards[0], MSOL.foundations[col])) {
+        mSolRemoveFrom(sel.source, sel.col, sel.idx);
+        MSOL.foundations[col].push(sel.cards[0]);
+        if (sel.source === 'tableau') { const src = MSOL.tableau[sel.col]; if (src.length > 0 && !src[src.length-1].faceUp) src[src.length-1].faceUp = true; }
+        MSOL.selected = null; mSolCheckWin(); mSolRender(); return;
+      }
+    }
+    if (source === 'tableau') {
+      const topCard = MSOL.tableau[col].length > 0 ? MSOL.tableau[col][MSOL.tableau[col].length-1] : null;
+      if (mSolCanStack(sel.cards[0], topCard)) {
+        mSolRemoveFrom(sel.source, sel.col, sel.idx);
+        sel.cards.forEach(c => MSOL.tableau[col].push(c));
+        if (sel.source === 'tableau') { const src = MSOL.tableau[sel.col]; if (src.length > 0 && !src[src.length-1].faceUp) src[src.length-1].faceUp = true; }
+        MSOL.selected = null; mSolRender(); return;
+      }
+    }
+    // Deselect if same card tapped again, or invalid — then re-select new card
+    MSOL.selected = null;
+    if (source === sel.source && col === sel.col && idx === sel.idx) { mSolRender(); return; }
+  }
+  // Select new card
+  let cards = [];
+  if (source === 'waste') {
+    if (MSOL.waste.length === 0) return;
+    cards = [MSOL.waste[MSOL.waste.length-1]];
+    MSOL.selected = { source:'waste', col:-1, idx: MSOL.waste.length-1, cards };
+  } else if (source === 'tableau') {
+    const card = MSOL.tableau[col][idx];
+    if (!card || !card.faceUp) {
+      // Flip face-down top card
+      if (idx === MSOL.tableau[col].length-1) { card.faceUp = true; mSolRender(); }
+      return;
+    }
+    cards = MSOL.tableau[col].slice(idx);
+    MSOL.selected = { source:'tableau', col, idx, cards };
+  } else if (source === 'foundation') {
+    if (MSOL.foundations[col].length === 0) return;
+    cards = [MSOL.foundations[col][MSOL.foundations[col].length-1]];
+    MSOL.selected = { source:'foundation', col, idx:0, cards };
+  }
+  mSolRender();
+}
+
+function mSolAutoMove(source, col, idx) {
+  const card = source === 'waste' ? MSOL.waste[MSOL.waste.length-1] : MSOL.tableau[col][idx];
+  if (!card || !card.faceUp) return;
+  if (source === 'tableau' && idx !== MSOL.tableau[col].length-1) return;
+  for (let f = 0; f < 4; f++) {
+    if (mSolCanFoundation(card, MSOL.foundations[f])) {
+      mSolRemoveFrom(source, col, idx);
+      MSOL.foundations[f].push(card);
+      if (source === 'tableau') { const src = MSOL.tableau[col]; if (src.length > 0 && !src[src.length-1].faceUp) src[src.length-1].faceUp = true; }
+      MSOL.selected = null; mSolCheckWin(); mSolRender(); return;
+    }
+  }
+}
+
+function mSolRender() {
+  const board = document.getElementById('m-sol-board');
+  if (!board) return;
+  board.innerHTML = '';
+  const boardW = board.clientWidth || window.innerWidth - 16;
+  const GAP = 4;
+  const CW = Math.floor((boardW - GAP * 8) / 7);
+  const CH = Math.round(CW * 1.4);
+  const COL_W = CW + GAP;
+  const TABLEAU_TOP = CH + GAP * 2 + 4;
+  const FACE_DOWN_OFF = Math.round(CH * 0.17);
+  const FACE_UP_OFF = Math.round(CH * 0.26);
+  const FONT_RANK = Math.max(10, Math.round(CW * 0.22));
+  const FONT_SUIT = Math.max(8, Math.round(CW * 0.16));
+  const FONT_CENTER = Math.max(14, Math.round(CW * 0.32));
+
+  // Store layout metrics for use in drag/drop
+  board._solMetrics = { CW, CH, COL_W, TABLEAU_TOP, FACE_DOWN_OFF, FACE_UP_OFF, GAP };
+
+  function makeCard(card, x, y, z, selFlag) {
+    const el = document.createElement('div');
+    el.className = 'm-sol-card' + (card.faceUp ? (mSolIsRed(card.suit) ? ' red' : ' black') : ' face-down') + (selFlag ? ' selected' : '');
+    el.style.cssText = `left:${x}px;top:${y}px;z-index:${z};width:${CW}px;height:${CH}px;`;
+    if (card.faceUp) {
+      el.innerHTML = `<span class="m-sol-rank" style="font-size:${FONT_RANK}px">${card.rank}</span><span class="m-sol-suit" style="font-size:${FONT_SUIT}px">${card.suit}</span><span class="m-sol-center" style="font-size:${FONT_CENTER}px">${card.suit}</span>`;
+    } else {
+      el.innerHTML = `<span style="font-size:${Math.round(CW*0.4)}px;color:rgba(255,51,161,0.75);text-shadow:0 0 8px rgba(255,51,161,0.9);">✦</span>`;
+    }
+    return el;
+  }
+  function makePile(x, y, label) {
+    const el = document.createElement('div');
+    el.className = 'm-sol-pile-empty';
+    el.style.cssText = `left:${x}px;top:${y}px;width:${CW}px;height:${CH}px;font-size:${FONT_CENTER}px;`;
+    el.textContent = label;
+    return el;
+  }
+
+  // Stock
+  const stockPile = makePile(0, 0, '↺');
+  stockPile.style.color = MSOL.stock.length === 0 ? 'rgba(255,51,161,0.2)' : 'rgba(255,51,161,0.5)';
+  stockPile.onclick = mSolDrawFromStock;
+  board.appendChild(stockPile);
+  if (MSOL.stock.length > 0) {
+    const sc = makeCard({faceUp:false}, 0, 0, 1, false);
+    sc.onclick = mSolDrawFromStock;
+    board.appendChild(sc);
+  }
+
+  // Waste
+  board.appendChild(makePile(COL_W, 0, '⬡'));
+  if (MSOL.waste.length > 0) {
+    const wCard = MSOL.waste[MSOL.waste.length-1];
+    const isSel = MSOL.selected && MSOL.selected.source === 'waste';
+    const isDragged = MSOL._draggingFrom && MSOL._draggingFrom.source === 'waste';
+    if (!isDragged) {
+      const wEl = makeCard(wCard, COL_W, 0, 10, isSel);
+      mSolWireCard(wEl, 'waste', -1, MSOL.waste.length - 1);
+      board.appendChild(wEl);
+    }
+  }
+
+  // Foundations
+  for (let f = 0; f < 4; f++) {
+    const fx = (f + 3) * COL_W;
+    const fPile = makePile(fx, 0, MSOL.SUITS[f]);
+    fPile.onclick = () => { if (MSOL.selected) mSolTapCard('foundation', f, 0); };
+    board.appendChild(fPile);
+    if (MSOL.foundations[f].length > 0) {
+      const fc = MSOL.foundations[f][MSOL.foundations[f].length-1];
+      const isSel = MSOL.selected && MSOL.selected.source === 'foundation' && MSOL.selected.col === f;
+      const fEl = makeCard(fc, fx, 0, 10+f, isSel);
+      mSolWireCard(fEl, 'foundation', f, 0);
+      board.appendChild(fEl);
+    }
+  }
+
+  // Tableau
+  let maxBottom = TABLEAU_TOP + CH;
+  for (let col = 0; col < 7; col++) {
+    const cx = col * COL_W;
+    const colPile = makePile(cx, TABLEAU_TOP, 'K');
+    colPile.onclick = () => { if (MSOL.selected && MSOL.selected.cards[0].rank === 'K') mSolTapCard('tableau', col, 0); };
+    board.appendChild(colPile);
+    let y = TABLEAU_TOP;
+    MSOL.tableau[col].forEach((card, idx) => {
+      const isDragged = MSOL._draggingFrom && MSOL._draggingFrom.source === 'tableau' && MSOL._draggingFrom.col === col && idx >= MSOL._draggingFrom.idx;
+      const isSel = MSOL.selected && MSOL.selected.source === 'tableau' && MSOL.selected.col === col && idx >= MSOL.selected.idx;
+      const el = makeCard(card, cx, y, 20 + col*20 + idx, isSel);
+      if (!isDragged) {
+        mSolWireCard(el, 'tableau', col, idx);
+        board.appendChild(el);
+      }
+      y += card.faceUp ? FACE_UP_OFF : FACE_DOWN_OFF;
+    });
+    maxBottom = Math.max(maxBottom, y + CH);
+  }
+  board.style.minHeight = (maxBottom + 16) + 'px';
+}
+
+// Wire tap + drag onto a card element
+function mSolWireCard(el, source, col, idx) {
+  let dragStarted = false;
+  let touchStartX = 0, touchStartY = 0;
+  let ghosts = [], dragCards = [];
+  let tapTimer = null;
+
+  el.addEventListener('touchstart', e => {
+    e.stopPropagation();
+    dragStarted = false;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    ghosts = []; dragCards = [];
+
+    // Face-down top card: just flip on tap
+    if (source === 'tableau') {
+      const card = MSOL.tableau[col][idx];
+      if (!card || !card.faceUp) return;
+    }
+
+    tapTimer = setTimeout(() => {}, 0); // placeholder
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    const dx = e.touches[0].clientX - touchStartX;
+    const dy = e.touches[0].clientY - touchStartY;
+    if (!dragStarted && Math.sqrt(dx*dx + dy*dy) > 8) {
+      // Initiate drag
+      dragStarted = true;
+      MSOL.selected = null;
+
+      if (source === 'waste') {
+        if (MSOL.waste.length === 0) return;
+        dragCards = [MSOL.waste[MSOL.waste.length-1]];
+      } else if (source === 'tableau') {
+        const card = MSOL.tableau[col][idx];
+        if (!card || !card.faceUp) { dragStarted = false; return; }
+        dragCards = MSOL.tableau[col].slice(idx);
+      } else if (source === 'foundation') {
+        if (MSOL.foundations[col].length === 0) { dragStarted = false; return; }
+        dragCards = [MSOL.foundations[col][MSOL.foundations[col].length-1]];
+      }
+
+      const board = document.getElementById('m-sol-board');
+      const m = board._solMetrics;
+      dragCards.forEach((card, i) => {
+        const g = document.createElement('div');
+        const isRed = mSolIsRed(card.suit);
+        g.className = 'm-sol-card ' + (isRed ? 'red' : 'black') + ' selected';
+        g.style.cssText = `position:fixed;width:${m.CW}px;height:${m.CH}px;z-index:99999;pointer-events:none;left:${touchStartX - m.CW/2}px;top:${touchStartY - m.CH*0.2 + i*m.FACE_UP_OFF}px;`;
+        const fr = Math.max(10, Math.round(m.CW*0.22)), fs = Math.max(8, Math.round(m.CW*0.16)), fc = Math.max(14, Math.round(m.CW*0.32));
+        g.innerHTML = `<span class="m-sol-rank" style="font-size:${fr}px">${card.rank}</span><span class="m-sol-suit" style="font-size:${fs}px">${card.suit}</span><span class="m-sol-center" style="font-size:${fc}px">${card.suit}</span>`;
+        document.body.appendChild(g);
+        ghosts.push(g);
+      });
+
+      // Mark source as dragging and re-render to hide cards
+      MSOL._draggingFrom = { source, col, idx };
+      mSolRender();
+    }
+
+    if (dragStarted && ghosts.length) {
+      e.preventDefault();
+      const board = document.getElementById('m-sol-board');
+      const m = board._solMetrics;
+      const cx = e.touches[0].clientX, cy = e.touches[0].clientY;
+      ghosts.forEach((g, i) => {
+        g.style.left = (cx - m.CW/2) + 'px';
+        g.style.top = (cy - m.CH*0.2 + i*m.FACE_UP_OFF) + 'px';
+      });
+    }
+  }, { passive: false });
+
+  el.addEventListener('touchend', e => {
+    if (dragStarted && ghosts.length) {
+      ghosts.forEach(g => g.remove());
+      ghosts = [];
+      MSOL._draggingFrom = null;
+      const tx = e.changedTouches[0].clientX, ty = e.changedTouches[0].clientY;
+      mSolTouchDrop(tx, ty, dragCards, source, col, idx);
+    } else {
+      // Tap
+      mSolTapCard(source, col, idx);
+    }
+    dragStarted = false;
+  }, { passive: true });
+}
+
+function mSolTouchDrop(cx, cy, cards, source, srcCol, srcIdx) {
+  if (!cards.length) { mSolRender(); return; }
+  const board = document.getElementById('m-sol-board');
+  const bRect = board.getBoundingClientRect();
+  const mx = cx - bRect.left, my = cy - bRect.top;
+  const m = board._solMetrics;
+  const { CW, CH, COL_W, TABLEAU_TOP, FACE_DOWN_OFF, FACE_UP_OFF } = m;
+
+  // Try foundation
+  for (let f = 0; f < 4; f++) {
+    const fx = (f + 3) * COL_W;
+    if (cards.length === 1 && mx >= fx && mx <= fx + CW && my >= 0 && my <= CH) {
+      if (mSolCanFoundation(cards[0], MSOL.foundations[f])) {
+        mSolRemoveFrom(source, srcCol, srcIdx);
+        MSOL.foundations[f].push(cards[0]);
+        if (source === 'tableau') { const s = MSOL.tableau[srcCol]; if (s.length > 0 && !s[s.length-1].faceUp) s[s.length-1].faceUp = true; }
+        MSOL.selected = null; mSolCheckWin(); mSolRender(); return;
+      }
+    }
+  }
+
+  // Try tableau
+  for (let col = 0; col < 7; col++) {
+    const cx2 = col * COL_W;
+    let colBottom = TABLEAU_TOP + CH;
+    MSOL.tableau[col].forEach(c => { colBottom += c.faceUp ? FACE_UP_OFF : FACE_DOWN_OFF; });
+    if (mx >= cx2 && mx <= cx2 + CW && my >= TABLEAU_TOP && my <= colBottom) {
+      const topCard = MSOL.tableau[col].length > 0 ? MSOL.tableau[col][MSOL.tableau[col].length-1] : null;
+      if (mSolCanStack(cards[0], topCard)) {
+        mSolRemoveFrom(source, srcCol, srcIdx);
+        cards.forEach(c => MSOL.tableau[col].push(c));
+        if (source === 'tableau') { const s = MSOL.tableau[srcCol]; if (s.length > 0 && !s[s.length-1].faceUp) s[s.length-1].faceUp = true; }
+        MSOL.selected = null; mSolRender(); return;
+      }
+    }
+  }
+  MSOL.selected = null;
+  mSolRender();
+}
+</script>
+</body>
+</html>
