@@ -1,0 +1,2989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dreamweave Studio — Desktop</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://i.imgur.com">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #291d14;
+  --pink: #ff33a1;
+  --pink-dim: rgba(255,51,161,0.5);
+  --pink-faint: rgba(255,51,161,0.07);
+  --pink-border: rgba(255,51,161,0.25);
+  --window-bg: rgba(16, 8, 5, 0.98);
+  --taskbar-bg: rgba(20, 12, 7, 0.99);
+  --font: 'VT323', monospace;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: var(--font);
+  cursor: none;
+  user-select: none;
+}
+
+#cursor {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999999;
+  width: 13px; height: 20px;
+  transform: translate(-1px, -1px);
+}
+
+.desktop {
+  position: fixed;
+  inset: 0;
+  bottom: 34px;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.wallpaper {
+  position: absolute;
+  inset: 0;
+  background: #291d14;
+}
+
+#binary-canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.wallpaper::before {
+  content: '';
+  position: absolute; inset: 0;
+  /* grid removed — restore background-image lines to bring it back */
+  background-size: 16px 16px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wallpaper::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── DESKTOP ICONS ── */
+.icon-grid {
+  position: absolute;
+  top: 16px; right: 14px;
+  display: grid;
+  grid-template-columns: 66px 66px;
+  grid-template-rows: repeat(5, auto);
+  gap: 6px;
+  z-index: 10;
+}
+.icon-grid .desktop-icon:nth-child(1),
+.icon-grid .desktop-icon:nth-child(2),
+.icon-grid .desktop-icon:nth-child(3) { grid-column: 1; }
+.icon-grid .desktop-icon:nth-child(4) { grid-column: 2; grid-row: 1; }
+.icon-grid .desktop-icon:nth-child(5) { grid-column: 2; grid-row: 2; }
+.icon-grid .desktop-icon:nth-child(6) { grid-column: 2; grid-row: 3; }
+.icon-grid .desktop-icon:nth-child(7) { grid-column: 2; grid-row: 4; }
+.icon-grid .desktop-icon:nth-child(8) { grid-column: 2; grid-row: 5; }
+
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: none;
+  width: 66px;
+  padding: 5px 3px;
+  border: 1px solid transparent;
+}
+.desktop-icon:hover {
+  background: rgba(255,51,161,0.1);
+  border-color: rgba(255,51,161,0.3);
+}
+
+.icon-img {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  filter: drop-shadow(0 0 5px rgba(255,51,161,0.5));
+  image-rendering: pixelated;
+}
+
+.icon-label {
+  font-size: 12px;
+  color: var(--pink);
+  text-align: center;
+  text-shadow: 0 0 6px var(--pink), 1px 1px 0 rgba(0,0,0,0.9);
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+/* ── WINDOWS ── */
+.window {
+  position: absolute;
+  min-width: 260px;
+  background: var(--window-bg);
+  border: 2px solid var(--pink);
+  display: flex;
+  flex-direction: column;
+  z-index: 10000;
+  contain: layout style paint;
+}
+.window.hidden { display: none; }
+.window.collapsed .win-body,
+.window.collapsed .win-menubar,
+.window.collapsed .win-statusbar,
+.window.collapsed .folder-toolbar { display: none; }
+.window.collapsed { height: auto !important; min-height: 0; }
+
+/* ── RESIZE HANDLES ── */
+.resize-handle {
+  position: absolute;
+  z-index: 10;
+}
+.resize-se { bottom: 0; right: 0; width: 10px; height: 10px; cursor: none; }
+.resize-e  { top: 28px; right: 0; width: 4px; bottom: 10px; cursor: none; }
+.resize-s  { bottom: 10px; left: 0; right: 10px; height: 4px; cursor: none; }
+
+/* pixel corner indicator */
+.resize-se::after {
+  content: '';
+  position: absolute;
+  bottom: 1px; right: 1px;
+  width: 8px; height: 8px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' style='image-rendering:pixelated'%3E%3Crect x='2' y='2' width='1' height='1' fill='%23ff33a1'/%3E%3Crect x='3' y='3' width='1' height='1' fill='%23ff33a1'/%3E%3Crect x='4' y='4' width='1' height='1' fill='%23ff33a1'/%3E%3Crect x='5' y='5' width='1' height='1' fill='%23ff33a1'/%3E%3Crect x='3' y='5' width='3' height='1' fill='%23ff33a1'/%3E%3Crect x='5' y='3' width='1' height='3' fill='%23ff33a1'/%3E%3C/svg%3E");
+  image-rendering: pixelated;
+}
+
+/* ── DITHERED TITLE BAR ── */
+.titlebar {
+  display: flex;
+  align-items: stretch;
+  height: 24px;
+  cursor: none;
+  flex-shrink: 0;
+  position: relative;
+  /* solid pink base */
+  background: var(--pink);
+  overflow: hidden;
+}
+
+/* dither overlay: checkerboard fading to transparent on left, opaque on right */
+.titlebar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-conic-gradient(
+    rgba(41,29,20,0.6) 0% 25%, transparent 0% 50%
+  );
+  background-size: 4px 4px;
+  -webkit-mask-image: linear-gradient(to right, transparent 25%, black 80%);
+  mask-image: linear-gradient(to right, transparent 25%, black 80%);
+  pointer-events: none;
+  z-index: 1;
+}
+#ml-menu-window .titlebar::after { display: none; }
+
+.titlebar-btns {
+  display: flex;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.tb-btn {
+  width: 20px; height: 24px;
+  border: none;
+  border-right: 1px solid rgba(0,0,0,0.3);
+  background: transparent;
+  color: #1a0a08;
+  font-family: var(--font);
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: none;
+  font-weight: bold;
+  position: relative;
+  z-index: 2;
+}
+.tb-btn:hover { background: rgba(0,0,0,0.18); }
+
+.titlebar-text {
+  flex: 1;
+  text-align: center;
+  font-size: 15px;
+  color: #1a0a08;
+  letter-spacing: 3px;
+  font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  z-index: 2;
+  padding-right: 20px;
+}
+
+.win-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--pink-border) transparent;
+}
+
+.win-menubar {
+  display: flex;
+  border-bottom: 1px solid var(--pink-border);
+  background: rgba(255,51,161,0.04);
+  flex-shrink: 0;
+}
+.win-menu-item {
+  padding: 2px 10px;
+  font-size: 13px;
+  color: var(--pink-dim);
+  cursor: none;
+  letter-spacing: 1px;
+  border-right: 1px solid rgba(255,51,161,0.08);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+@keyframes floatUpDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.win-menu-item:hover { background: var(--pink); color: #1a0a08; }
+
+.win-statusbar {
+  border-top: 1px solid var(--pink-border);
+  padding: 1px 8px;
+  font-size: 12px;
+  color: var(--pink-dim);
+  letter-spacing: 1px;
+  display: flex;
+  gap: 10px;
+  background: rgba(255,51,161,0.02);
+  flex-shrink: 0;
+}
+.win-statusbar span { border-right: 1px solid var(--pink-border); padding-right: 10px; }
+.win-statusbar span:last-child { border-right: none; }
+
+/* ── PROJECTS grid (work-item style) ── */
+.proj-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.proj-item {
+  aspect-ratio: 16/10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: none;
+  padding: 14px;
+  position: relative;
+  border: 1px solid rgba(255,51,161,0.06);
+  overflow: hidden;
+  transition: background 0.15s;
+}
+.proj-item:hover, .proj-item.active { background: rgba(255,51,161,0.08); }
+.proj-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--pink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s;
+}
+.proj-item:hover::after { transform: scaleX(1); }
+.proj-item.hidden-proj { display: none; }
+
+.proj-item-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: url(#duotone-brown) brightness(0.25);
+  transition: filter 0.4s ease;
+  z-index: 0;
+}
+.proj-item-bg.lighter {
+  filter: url(#duotone-brown) brightness(0.375);
+}
+.proj-item-bg::after { display: none; }
+.proj-item:hover .proj-item-bg,
+.proj-item:hover .proj-item-bg.lighter,
+.proj-item.active .proj-item-bg,
+.proj-item.active .proj-item-bg.lighter {
+  filter: brightness(1);
+}
+.proj-item > *:not(.proj-item-bg) { position: relative; z-index: 1; }
+
+.work-num { font-size: 10px; color: var(--pink-dim); letter-spacing: 2px; position: absolute; top: 5px; left: 7px; }
+.work-title { font-size: 18px; color: var(--pink); letter-spacing: 2px; text-shadow: 0 0 8px var(--pink); text-align: center; }
+.work-medium { font-size: 12px; color: var(--pink); letter-spacing: 1.5px; text-align: center; opacity: 0.75; }
+.work-sub { font-size: 11px; color: var(--pink-dim); letter-spacing: 1px; text-align: center; }
+.work-item-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--pink); transform: scaleX(0); transform-origin: left; transition: transform 0.2s; }
+.proj-item:hover .work-item-bar { transform: scaleX(1); }
+
+/* ── MUSIC PLAYER ── */
+.player-window { bottom: 56px; left: 24px; width: 260px; top: auto; }
+
+.player-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.player-marquee-wrap {
+  overflow: hidden;
+  border: 1px solid var(--pink-border);
+  background: rgba(255,51,161,0.04);
+  padding: 3px 6px;
+}
+.player-marquee {
+  font-size: 13px;
+  color: var(--pink);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  display: inline-block;
+  animation: marquee 14s linear infinite;
+}
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.player-progress-wrap { display: flex; flex-direction: column; gap: 3px; }
+.player-progress-bar {
+  width: 100%; height: 6px;
+  background: rgba(255,51,161,0.1);
+  border: 1px solid var(--pink-border);
+  cursor: none;
+  position: relative;
+}
+.player-progress-fill {
+  height: 100%;
+  background: var(--pink);
+  width: 0%;
+  transition: width 1s linear;
+  box-shadow: 0 0 6px var(--pink);
+}
+.player-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--pink-dim);
+  letter-spacing: 1px;
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.player-btn {
+  font-size: 16px;
+  color: var(--pink-dim);
+  cursor: none;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--pink-border);
+  transition: all 0.1s;
+  letter-spacing: 0;
+}
+.player-btn:hover { background: var(--pink-faint); color: var(--pink); border-color: var(--pink); }
+.player-btn-main {
+  width: 36px; height: 36px;
+  font-size: 18px;
+  border-color: var(--pink);
+  color: var(--pink);
+  background: rgba(255,51,161,0.08);
+}
+.player-btn-main:hover { background: var(--pink); color: #1a0a08; }
+
+.player-vol-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.player-vol-label { font-size: 11px; color: var(--pink-dim); letter-spacing: 2px; }
+.player-vol-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255,51,161,0.15);
+  border: 1px solid var(--pink-border);
+  outline: none;
+  cursor: none;
+}
+.player-vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 8px; height: 12px;
+  background: var(--pink);
+  cursor: none;
+  box-shadow: 0 0 4px var(--pink);
+}
+
+.win-menu-item.active-filter { background: var(--pink); color: #1a0a08; }
+  display: flex;
+  align-items: center;
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--pink-border);
+  gap: 3px;
+  flex-shrink: 0;
+}
+.folder-tb-btn {
+  padding: 1px 7px;
+  font-size: 12px;
+  color: var(--pink-dim);
+  border: 1px solid var(--pink-border);
+  letter-spacing: 1px;
+  cursor: none;
+}
+.folder-tb-btn:hover { background: var(--pink-faint); color: var(--pink); }
+.folder-path { font-size: 12px; color: var(--pink-dim); padding: 0 6px; flex: 1; letter-spacing: 1px; }
+.folder-path span { color: var(--pink); }
+
+/* ── PROJECTS ── */
+.folder-window { top: 30px; left: 180px; width: 440px; height: 630px; }
+
+.folder-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 8px;
+  gap: 2px;
+}
+
+.folder-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 3px;
+  cursor: none;
+  border: 1px solid transparent;
+}
+.folder-item:hover { background: rgba(255,51,161,0.09); border-color: var(--pink-border); }
+.folder-item .f-icon { width: 32px; height: 32px; image-rendering: pixelated; filter: drop-shadow(0 0 4px rgba(255,51,161,0.4)); }
+.folder-item .f-label { font-size: 11px; color: var(--pink); text-align: center; letter-spacing: 0.5px; line-height: 1.1; }
+
+.about-window { top: 65px; right: 160px; left: auto; width: 290px; }
+.about-body { padding: 14px; }
+.about-body p { font-size: 15px; color: rgba(255,51,161,0.65); line-height: 1.7; margin-bottom: 8px; letter-spacing: 0.5px; }
+.about-label { font-size: 12px; color: var(--pink-dim); letter-spacing: 3px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+.about-label::before { content: '■'; font-size: 6px; color: var(--pink); }
+.about-divider { border: none; border-top: 1px solid var(--pink-border); margin: 8px 0; }
+
+/* ── CONTACT ── */
+.contact-window { top: 200px; left: calc(50% - 160px); width: 320px; }
+.dialog-body { padding: 12px 14px 14px; }
+.dialog-msg { font-size: 12px; color: var(--pink-dim); letter-spacing: 1px; margin-bottom: 10px; line-height: 1.5; border-left: 2px solid var(--pink-border); padding-left: 7px; }
+.dialog-field { margin-bottom: 7px; }
+.dialog-field label { display: block; font-size: 10px; color: var(--pink-dim); letter-spacing: 2px; margin-bottom: 2px; }
+.dialog-field input, .dialog-field textarea {
+  width: 100%;
+  background: rgba(255,51,161,0.04);
+  border: 1px solid var(--pink-border);
+  border-bottom: 2px solid rgba(255,51,161,0.35);
+  color: var(--pink);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 4px 6px;
+  outline: none;
+  resize: none;
+  letter-spacing: 1px;
+  cursor: none;
+}
+.dialog-field input:focus, .dialog-field textarea:focus { border-color: var(--pink); background: rgba(255,51,161,0.06); }
+.dialog-btns { display: flex; gap: 0; justify-content: flex-end; margin-top: 10px; border-top: 1px solid var(--pink-border); padding-top: 8px; }
+.dialog-btn { font-family: var(--font); font-size: 13px; letter-spacing: 2px; padding: 3px 14px; border: 1px solid var(--pink-border); background: transparent; color: var(--pink-dim); cursor: none; margin-left: 3px; }
+.dialog-btn:hover { background: var(--pink-faint); color: var(--pink); border-color: var(--pink); }
+.dialog-btn.primary { background: var(--pink); color: #1a0a08; border-color: var(--pink); }
+.dialog-btn.primary:hover { background: rgba(255,51,161,0.8); color: #fff; }
+
+/* ── TASKBAR ── */
+.taskbar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 34px;
+  background: var(--taskbar-bg);
+  border-top: 2px solid var(--pink);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 5px;
+  z-index: 999998;
+}
+
+.start-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 0 10px; height: 24px;
+  border: 1px solid var(--pink);
+  font-size: 14px; color: var(--pink);
+  letter-spacing: 2px; cursor: none;
+  background: var(--bg); white-space: nowrap;
+}
+.start-btn:hover { background: var(--pink-faint); }
+
+.taskbar-divider { width: 1px; height: 20px; background: var(--pink-border); flex-shrink: 0; }
+.taskbar-tabs { display: flex; gap: 3px; flex: 1; overflow: hidden; }
+.taskbar-tab {
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 9px; height: 24px;
+  border: 1px solid var(--pink-border);
+  font-size: 12px; color: var(--pink-dim);
+  letter-spacing: 1px; cursor: none; white-space: nowrap;
+}
+.taskbar-tab:hover, .taskbar-tab.active { background: var(--pink-faint); color: var(--pink); border-color: rgba(255,51,161,0.45); }
+.tab-dot { width: 5px; height: 5px; background: var(--pink); flex-shrink: 0; }
+.tab-close { margin-left: 6px; font-size: 10px; color: var(--pink-dim); cursor: none; line-height: 1; }
+.tab-close:hover { color: var(--pink); }
+
+.system-tray { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; border-left: 1px solid var(--pink-border); padding-left: 10px; }
+.taskbar-clock { font-size: 15px; color: var(--pink-dim); letter-spacing: 2px; }
+
+/* ── PAINT ── */
+.pt-tool {
+  font-family: var(--font); font-size: 18px; color: var(--pink-dim);
+  width: 32px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; cursor: none; letter-spacing: 0;
+  transition: color 0.1s, border-color 0.1s, background 0.1s;
+}
+.pt-tool:hover { color: var(--pink); border-color: var(--pink-border); background: var(--pink-faint); }
+.pt-tool.active-tool { color: var(--pink); border-color: var(--pink); background: var(--pink-faint); }
+.pt-size { cursor: none; transition: transform 0.1s; }
+.pt-size:hover { transform: scale(1.2); }
+.pt-size.active-size { box-shadow: 0 0 0 2px var(--pink); }
+.paint-swatch { width: 18px; height: 18px; border: 1px solid rgba(255,51,161,0.2); cursor: none; flex-shrink: 0; transition: transform 0.1s, border-color 0.1s; }
+.paint-swatch:hover { transform: scale(1.2); border-color: var(--pink); z-index: 1; position: relative; }
+
+/* ── SOLITAIRE ── */
+.sol-card {
+  position: absolute;
+  width: 68px; height: 96px;
+  border: 1px solid rgba(255,51,161,0.4);
+  border-radius: 4px;
+  background: #1a0d08;
+  box-sizing: border-box;
+  cursor: none;
+  font-family: var(--font);
+  display: flex; flex-direction: column;
+  padding: 3px 4px;
+  transition: box-shadow 0.1s;
+  user-select: none;
+  overflow: hidden;
+}
+.sol-card:hover { border-color: var(--pink); box-shadow: 0 0 8px rgba(255,51,161,0.4); }
+.sol-card.dragging { box-shadow: 0 0 16px rgba(255,51,161,0.8); }
+.sol-card.face-down {
+  background-color: #1a0d08;
+  background-image: repeating-linear-gradient(45deg, rgba(255,51,161,0.12) 0px, rgba(255,51,161,0.12) 2px, transparent 2px, transparent 8px);
+  display: flex; align-items: center; justify-content: center;
+}
+.sol-card.red { color: var(--pink); }
+.sol-card.black { color: #ffffff; }
+.sol-rank { font-size: 18px; line-height: 1; letter-spacing: 0; }
+.sol-suit { font-size: 14px; line-height: 1; }
+.sol-center { font-size: 28px; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.sol-pile-empty {
+  position: absolute;
+  width: 68px; height: 96px;
+  border: 1px dashed rgba(255,51,161,0.25);
+  border-radius: 4px;
+  box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); font-size: 22px;
+  color: rgba(255,51,161,0.2);
+}
+.sol-pile-empty.clickable { cursor: none; }
+.sol-pile-empty.clickable:hover { border-color: rgba(255,51,161,0.5); color: rgba(255,51,161,0.4); }
+
+
+.start-menu {
+  position: fixed;
+  bottom: 34px; left: 0; width: 190px;
+  background: var(--taskbar-bg);
+  border: 2px solid var(--pink); border-bottom: none;
+  z-index: 999999; display: none;
+  box-shadow: 3px -3px 0 rgba(255,51,161,0.2);
+}
+.start-menu.open { display: block; }
+.start-menu-header { padding: 8px 12px; border-bottom: 2px solid var(--pink); background: var(--pink); }
+.start-menu-header .name { font-size: 18px; color: #1a0a08; letter-spacing: 3px; }
+.start-menu-header .sub { font-size: 10px; color: rgba(26,10,8,0.65); letter-spacing: 2px; }
+.start-menu-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 14px; color: var(--pink-dim); letter-spacing: 1px; cursor: none; border-bottom: 1px solid rgba(255,51,161,0.06); }
+.start-menu-item:hover { background: var(--pink); color: #1a0a08; }
+.start-menu-item .sm-icon { font-size: 16px; width: 18px; text-align: center; filter: grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5); }
+.start-menu-sep { border: none; border-top: 1px solid var(--pink-border); margin: 2px 0; }
+
+@keyframes fadeOut { from{opacity:1} to{opacity:0;pointer-events:none} }
+@keyframes flicker { 0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:0.4} 95%{opacity:1} 97%{opacity:0.6} 99%{opacity:1} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes cascadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+#splash {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 9999999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 40px; cursor: none;
+}
+#splash::before {
+  content: ''; position: absolute; inset: 0;
+  background-size: 16px 16px; pointer-events: none;
+}
+#splash::after {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+  pointer-events: none;
+}
+@keyframes suckIn {
+  0%   { transform: perspective(600px) rotateZ(0deg) scale(1);    opacity: 1; filter: blur(0px); }
+  60%  { transform: perspective(600px) rotateZ(300deg) scale(0.4); opacity: 0.8; filter: blur(1px); }
+  100% { transform: perspective(600px) rotateZ(540deg) scale(0);   opacity: 0; filter: blur(8px); }
+}
+
+.splash-text {
+  font-family: var(--font); font-size: 22px;
+  color: var(--pink); text-align: center;
+  max-width: 520px; line-height: 1.9; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px var(--pink), 0 0 20px var(--pink);
+  position: relative; z-index: 1; padding: 0 24px;
+  opacity: 0;
+  animation: cascadeIn 0.8s ease forwards;
+  animation-delay: 0.3s;
+}
+.splash-text em { color: #fff; font-style: normal; text-shadow: 0 0 10px var(--pink), 0 0 24px var(--pink), 0 0 40px var(--pink); }
+
+.splash-enter {
+  font-family: var(--font); font-size: 18px;
+  color: var(--pink); letter-spacing: 4px;
+  border: 1px solid var(--pink); padding: 8px 32px;
+  background: rgba(16, 8, 5, 0.45); cursor: none;
+  position: relative; z-index: 1;
+  transition: background 0.15s, color 0.15s;
+  opacity: 0;
+  animation: cascadeIn 0.8s ease forwards;
+  animation-delay: 0.8s;
+}
+.splash-enter:hover { background: var(--pink); color: #1a0a08; }
+.splash-enter-blink { animation: spinSpiral 3s linear infinite; }
+@keyframes spinSpiral { from { display: inline-block; transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+</style>
+</head>
+<body>
+
+<a href="#main-desktop" class="skip-link" style="position:fixed;top:-100px;left:0;z-index:999999999;background:var(--pink);color:#1a0a08;padding:8px 16px;font-family:var(--font);font-size:16px;letter-spacing:2px;text-decoration:none;transition:top 0.2s;" onfocus="this.style.top='0'" onblur="this.style.top='-100px'">SKIP TO CONTENT</a>
+<div id="cursor" aria-hidden="true">
+  <svg width="13" height="20" viewBox="0 0 13 20" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">
+    <polygon points="0,0 0,16 4,12 7,19 9,18 6,11 11,11" fill="#291d14"/>
+    <polygon points="1,1 1,14 4,11 7,17 8,17 5,10 10,10 1,1" fill="#ff33a1"/>
+  </svg>
+</div>
+<canvas id="star-trail" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;z-index:99999998;will-change:contents;"></canvas>
+
+<!-- SPLASH / ENTER SCREEN -->
+<div id="splash" role="dialog" aria-modal="true" aria-label="Welcome to Dreamweave Studio">
+  <canvas id="splash-binary-canvas" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.15;pointer-events:none;"></canvas>
+  <div class="splash-text">
+    <div aria-hidden="true" style="font-size:32px;margin-bottom:8px;text-shadow:0 0 8px var(--pink);font-family:'Segoe UI','Apple Color Emoji','Noto Sans',sans-serif;">૮꒰˶ - ˕ -꒱ა</div>
+    Did you ever get the feeling you were just a <em>little different?</em><br>
+    Well, here's our web page.<br>
+    <em>You've finally found a home.</em>
+  </div>
+  <div class="splash-enter" onclick="enterSite()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')enterSite()">
+    ENTER <span class="splash-enter-blink" aria-hidden="true" style="display:inline-block;">꩜</span>
+  </div>
+</div>
+
+<div class="desktop" id="main-desktop" role="application" aria-label="Dreamweave Studio desktop">
+  <div class="wallpaper">
+    <canvas id="binary-canvas" aria-hidden="true"></canvas>
+  </div>
+  <img src="https://i.imgur.com/cWyCrfY.png" id="desktop-cat" onclick="playMeow(event)" alt="Pink pixel cat — click for a surprise" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')playMeow(event)" style="position:absolute;bottom:40px;right:16px;width:180px;z-index:5;pointer-events:auto;cursor:none;image-rendering:pixelated;opacity:0.85;" />
+  <canvas id="cat-stars-back" aria-hidden="true" style="position:absolute;bottom:40px;right:16px;width:180px;height:180px;z-index:4;pointer-events:none;"></canvas>
+  <canvas id="cat-stars-front" aria-hidden="true" style="position:absolute;bottom:40px;right:16px;width:180px;height:180px;z-index:6;pointer-events:none;"></canvas>
+
+  <!-- Desktop icons: 3 pages -->
+  <div class="icon-grid" role="toolbar" aria-label="Desktop shortcuts">
+
+    <!-- PROJECTS -->
+    <div class="desktop-icon" onclick="openWindow('folder-window')" role="button" tabindex="0" aria-label="Open Portfolio" onkeydown="if(event.key==='Enter'||event.key===' ')openWindow('folder-window')">
+      <div class="icon-img" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <span aria-hidden="true" style="font-size:32px;line-height:1;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 6px rgba(255,51,161,0.7));">🪩</span>
+      </div>
+      <div class="icon-label">PORTFOLIO</div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="desktop-icon" onclick="openWindow('about-window')" role="button" tabindex="0" aria-label="Open About" onkeydown="if(event.key==='Enter'||event.key===' ')openWindow('about-window')">
+      <div class="icon-img" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <span aria-hidden="true" style="font-size:32px;line-height:1;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 6px rgba(255,51,161,0.7));">✨</span>
+      </div>
+      <div class="icon-label">ABOUT</div>
+    </div>
+
+    <!-- CONTACT -->
+    <div class="desktop-icon" onclick="openWindow('contact-window')" role="button" tabindex="0" aria-label="Open Contact" onkeydown="if(event.key==='Enter'||event.key===' ')openWindow('contact-window')">
+      <div class="icon-img" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <span aria-hidden="true" style="font-size:32px;line-height:1;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 6px rgba(255,51,161,0.7));">💌</span>
+      </div>
+      <div class="icon-label">CONTACT</div>
+    </div>
+
+    <!-- PLAYER -->
+    <div class="desktop-icon" onclick="openWindow('player-window')" role="button" tabindex="0" aria-label="Open Music Player" onkeydown="if(event.key==='Enter'||event.key===' ')openWindow('player-window')">
+      <div class="icon-img" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <span aria-hidden="true" style="font-size:32px;line-height:1;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 6px rgba(255,51,161,0.7));">🎵</span>
+      </div>
+      <div class="icon-label">PLAYER</div>
+    </div>
+
+    <!-- SOCIALS -->
+    <div class="desktop-icon" onclick="window.open('https://www.instagram.com/dreamweave.design/','_blank')" role="button" tabindex="0" aria-label="Open Instagram (external link)" onkeydown="if(event.key==='Enter'||event.key===' ')window.open('https://www.instagram.com/dreamweave.design/','_blank')">
+      <div class="icon-img" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <span aria-hidden="true" style="font-size:32px;line-height:1;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 6px rgba(255,51,161,0.7));">🦋</span>
+      </div>
+      <div class="icon-label">SOCIALS</div>
+    </div>
+
+    <!-- PAINT -->
+    <div class="desktop-icon" onclick="openWindow('paint-window')" role="button" tabindex="0" aria-label="Open Paint" onkeydown="if(event.key==='Enter'||event.key===' ')openWindow('paint-window')">
+      <div class="icon-img" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <span aria-hidden="true" style="font-size:32px;line-height:1;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 6px rgba(255,51,161,0.7));">🎨</span>
+      </div>
+      <div class="icon-label">PAINT</div>
+    </div>
+
+    <!-- SOLITAIRE -->
+    <div class="desktop-icon" onclick="openWindow('solitaire-window')" role="button" tabindex="0" aria-label="Open Solitaire" onkeydown="if(event.key==='Enter'||event.key===' ')openWindow('solitaire-window')">
+      <div class="icon-img" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <span aria-hidden="true" style="font-size:32px;line-height:1;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 6px rgba(255,51,161,0.7));">♠️</span>
+      </div>
+      <div class="icon-label">SOLITAIRE</div>
+    </div>
+
+    <!-- ARCHIVE -->
+    <div class="desktop-icon" onclick="openWindow('archive-window')" role="button" tabindex="0" aria-label="Open Archive" onkeydown="if(event.key==='Enter'||event.key===' ')openWindow('archive-window')">
+      <div class="icon-img" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <span aria-hidden="true" style="font-size:32px;line-height:1;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 6px rgba(255,51,161,0.7));">📂</span>
+      </div>
+      <div class="icon-label">ARCHIVE</div>
+    </div>
+
+  </div>
+
+</div>
+
+  <!-- ── PROJECTS WINDOW ── -->
+  <div class="window folder-window hidden" id="folder-window" role="dialog" aria-label="Portfolio window">
+    <div class="titlebar" onmousedown="startDrag(event,'folder-window')" ontouchstart="startDrag(event,'folder-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('folder-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('folder-window')">✕</div>
+        <div class="tb-btn" onclick="toggleCollapse('folder-window')" role="button" tabindex="0" aria-label="Minimize window" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCollapse('folder-window')">─</div>
+      </div>
+      <div class="titlebar-text">PORTFOLIO</div>
+    </div>
+    <div class="win-menubar">
+      <div class="win-menu-item active-filter" onclick="filterProjects('all', this)" role="tab" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')filterProjects('all',this)">ALL</div>
+      <div class="win-menu-item" onclick="filterProjects('creative-direction', this)" role="tab" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')filterProjects('creative-direction',this)">CREATIVE DIRECTION</div>
+      <div class="win-menu-item" onclick="filterProjects('branding', this)" role="tab" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')filterProjects('branding',this)">BRANDING</div>
+      <div class="win-menu-item" onclick="filterProjects('pixel-art', this)" role="tab" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')filterProjects('pixel-art',this)">PIXEL ART</div>
+      <div class="win-menu-item" onclick="filterProjects('game-design', this)" role="tab" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')filterProjects('game-design',this)">GAME DESIGN</div>
+    </div>
+    <div class="win-body">
+      <div class="proj-grid" id="proj-grid">
+        <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('ls-menu-window', event)">
+          <div class="proj-item-bg lighter" style="background-image: url('https://i.imgur.com/7L3sM1h.jpeg');"></div>
+          <div class="work-num">01</div>
+          <div class="work-title">LAUNDRY SLAY</div>
+          <div class="work-medium">PHOTOSHOOT · VIDEO SHOOT</div>
+          <div class="work-sub">creative director · coming soon: summer 2026</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('ml-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/XcEikom.jpeg');"></div>
+          <div class="work-num">02</div>
+          <div class="work-title">MARSHMALLOW LOVER</div>
+          <div class="work-medium">MUSIC VIDEO</div>
+          <div class="work-sub">creative director · coming soon: spring 2026</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('nb-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/MxbgVpV.jpeg');"></div>
+          <div class="work-num">03</div>
+          <div class="work-title">NICK + BECCA</div>
+          <div class="work-medium">PHOTOSHOOT</div>
+          <div class="work-sub">creative director · coming soon: spring 2026</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('mt-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/CkfeJ0s.jpeg');"></div>
+          <div class="work-num">04</div>
+          <div class="work-title">MULTITASKERS</div>
+          <div class="work-medium">PHOTOSHOOT</div>
+          <div class="work-sub">creative director · feb 2026</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="branding pixel-art" onclick="openProjMenu('tv-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/LRq3whC.png');"></div>
+          <div class="work-num">05</div>
+          <div class="work-title">TWILIGHT + VINE</div>
+          <div class="work-medium">LOGO · BRANDING</div>
+          <div class="work-sub">pixel artist · jan 2026</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="pixel-art" onclick="openProjMenu('ly-menu-window', event)">
+          <div class="proj-item-bg lighter" style="background-image: url('https://i.imgur.com/WVbk56X.gif');"></div>
+          <div class="work-num">06</div>
+          <div class="work-title">LUNA YEN</div>
+          <div class="work-medium">PIXEL ANIMATION</div>
+          <div class="work-sub">pixel artist · fall 2025</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="branding" onclick="openProjMenu('lavande-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/RCsnloe.png');"></div>
+          <div class="work-num">07</div>
+          <div class="work-title">LAVANDE</div>
+          <div class="work-medium">LOGO · BRANDING</div>
+          <div class="work-sub">graphic designer · fall 2025</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="pixel-art" onclick="openProjMenu('coven-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/qEpc8y0.gif');"></div>
+          <div class="work-num">08</div>
+          <div class="work-title">COVEN COLLECTIVE</div>
+          <div class="work-medium">PIXEL ANIMATIONS</div>
+          <div class="work-sub">pixel artist · jun 2025</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('dyp-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/gdnumam.gif');"></div>
+          <div class="work-num">09</div>
+          <div class="work-title">DO YOU PLEASER?</div>
+          <div class="work-medium">SOCIAL REEL</div>
+          <div class="work-sub">creative director · editor · feb 2024</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="branding" onclick="openProjMenu('ljd-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/HPyDsZO.gif');"></div>
+          <div class="work-num">10</div>
+          <div class="work-title">LADYJANEDANCE.COM</div>
+          <div class="work-medium">WEBSITE · BRANDING</div>
+          <div class="work-sub">web designer · jul 2024</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="branding" onclick="openProjMenu('bbt-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/alTvnJP.png');"></div>
+          <div class="work-num">11</div>
+          <div class="work-title">THE BACKWARDS BIKINI TOP</div>
+          <div class="work-medium">LOGO · BRANDING</div>
+          <div class="work-sub">graphic designer · jul 2024</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="branding motion-graphic" onclick="openProjMenu('bs-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/QBfaKai.gif');"></div>
+          <div class="work-num">12</div>
+          <div class="work-title">BUBBLE SKINCARE</div>
+          <div class="work-medium">MOTION GRAPHIC</div>
+          <div class="work-sub">motion graphic designer · apr 2024</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="game-design pixel-art" onclick="openProjMenu('cc-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/X63HWac.gif');"></div>
+          <div class="work-num">13</div>
+          <div class="work-title">CONGA CRITTERS</div>
+          <div class="work-medium">VIDEO GAME</div>
+          <div class="work-sub">game designer · pixel artist · in development</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="game-design pixel-art" onclick="openProjMenu('reverb-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/FXjhtPm.gif');"></div>
+          <div class="work-num">14</div>
+          <div class="work-title">REVERB</div>
+          <div class="work-medium">VIDEO GAME</div>
+          <div class="work-sub">game designer · pixel artist · in development</div>
+          <div class="work-item-bar"></div>
+        </div>
+      </div>
+    </div>
+    <div class="win-statusbar">
+      <span id="proj-count">14 PROJECTS</span>
+      <span>DREAMWEAVE STUDIO</span>
+    </div>
+    <div class="resize-handle resize-se" onmousedown="startResize(event,'folder-window','se')" ontouchstart="startResize(event,'folder-window','se')"></div>
+    <div class="resize-handle resize-e"  onmousedown="startResize(event,'folder-window','e')" ontouchstart="startResize(event,'folder-window','e')"></div>
+    <div class="resize-handle resize-s"  onmousedown="startResize(event,'folder-window','s')" ontouchstart="startResize(event,'folder-window','s')"></div>
+  </div>
+
+  <!-- ── MARSHMALLOW LOVER MENU ── -->
+  <div class="window hidden" id="ml-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">MAKES ME NIBBLE NIBBLE</span><span onclick="closeProjMenu('ml-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('MARSHMALLOW LOVER — PITCH DECK', 'https://www.canva.com/design/DAHC7TaxXAU/90yZ96BfKjv2IcZh-6wyVA/view?embed')">✦ PITCH DECK</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('MARSHMALLOW LOVER — MUSIC VIDEO', '')">✦ MUSIC VIDEO</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('MARSHMALLOW LOVER — BTS', '')">✦ BTS</div>
+      <div class="dialog-btn" onclick="openTeamWindow('MARSHMALLOW LOVER')">✦ TEAM</div>
+    </div>
+  </div>
+
+  <!-- ── LAUNDRY SLAY MENU ── -->
+  <div class="window hidden" id="ls-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">HOT GIRLS HAVE CHORES TOO</span><span onclick="closeProjMenu('ls-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — PITCH DECK', 'https://www.canva.com/design/DAHDD7HhH3c/twna8ETTnWlif6i0Udn1AA/view?embed')">✦ PITCH DECK</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — PHOTOS', '')">✦ PHOTOS</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — VIDEO', '')">✦ VIDEO</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — BTS', '')">✦ BTS</div>
+      <div class="dialog-btn" onclick="openTeamWindow('LAUNDRY SLAY')">✦ TEAM</div>
+    </div>
+  </div>
+
+  <!-- ── NICK + BECCA MENU ── -->
+  <div class="window hidden" id="nb-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">A BUZZ OF AN ENGAGEMENT</span><span onclick="closeProjMenu('nb-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('NICK + BECCA — PITCH DECK', 'https://www.canva.com/design/DAHDAB8J2cM/tEbT-vqMoiEuVX7Yl4djnA/view?embed')">✦ PITCH DECK</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('NICK + BECCA — PHOTOS', '')">✦ PHOTOS</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('NICK + BECCA — BTS', '')">✦ BTS</div>
+      <div class="dialog-btn" onclick="openTeamWindow('NICK + BECCA')">✦ TEAM</div>
+    </div>
+  </div>
+
+  <!-- ── MULTITASKERS MENU ── -->
+  <div class="window hidden" id="mt-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">MANY HANDS MAKE LIGHT WORK</span><span onclick="closeProjMenu('mt-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('MULTITASKERS — PITCH DECK', 'https://www.canva.com/design/DAG_prBxQAw/UYNUp6PQEG47uU5R8vjBoA/view?embed')">✦ PITCH DECK</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('MULTITASKERS — PHOTOS', '')">✦ PHOTOS</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('MULTITASKERS — BTS', '')">✦ BTS</div>
+      <div class="dialog-btn" onclick="openTeamWindow('MULTITASKERS')">✦ TEAM</div>
+    </div>
+  </div>
+
+  <!-- ── TWILIGHT + VINE MENU ── -->
+  <div class="window hidden" id="tv-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">CROCHET FOR RAVERS + ROLLERS</span><span onclick="closeProjMenu('tv-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('TWILIGHT + VINE — LOGO', 'https://i.imgur.com/LRq3whC.png')">✦ LOGO</div>
+    </div>
+  </div>
+
+  <!-- ── LUNA YEN MENU ── -->
+  <div class="window hidden" id="ly-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">MAIN CHARACTER ENERGY</span><span onclick="closeProjMenu('ly-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('LUNA YEN — ANIMATION', 'https://i.imgur.com/WVbk56X.gif')">✦ ANIMATION</div>
+    </div>
+  </div>
+
+  <!-- ── DO YOU PLEASER? MENU ── -->
+  <div class="window hidden" id="dyp-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">THE THINGS YOU CAN DO<br>WHEN YOU WEAR THE RIGHT SHOE</span><span onclick="closeProjMenu('dyp-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('DO YOU PLEASER? — VIDEO', 'https://player.vimeo.com/video/1172293718?badge=0&autopause=0&player_id=0&app_id=58479&dnt=1&loop=1')">✦ VIDEO</div>
+      <div class="dialog-btn" onclick="openTeamWindow('DO YOU PLEASER?')">✦ TEAM</div>
+    </div>
+  </div>
+
+  <!-- ── LADYJANEDANCE MENU ── -->
+  <div class="window hidden" id="ljd-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">MOM, MOMMY, MOTHER</span><span onclick="closeProjMenu('ljd-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('LADYJANEDANCE — BRANDING', 'https://www.canva.com/design/DAGJLjKwrGI/7ulU0KC27CrLiC_vuM1zOA/view?embed')">✦ BRANDING</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('LADYJANEDANCE — SCREENSHOTS', 'https://www.canva.com/design/DAHDrEYaVCk/c-ZV8omapSz0mG8hwf5_hw/view?embed')">✦ SCREENSHOTS</div>
+    </div>
+  </div>
+
+  <!-- ── THE BACKWARDS BIKINI TOP MENU ── -->
+  <div class="window hidden" id="bbt-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">UM, YOU'RE WEARING IT BACKWARDS</span><span onclick="closeProjMenu('bbt-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('THE BACKWARDS BIKINI TOP — BUSINESS CARD', 'https://www.canva.com/design/DAGIzuaD8Wg/tPmZZue11jTLTV0IKWU_JA/view?embed')">✦ BUSINESS CARD</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('THE BACKWARDS BIKINI TOP — LOGO / STICKERS', 'https://www.canva.com/design/DAGIzYAaocM/n0XVIx8h1gVmtsPIurqHdw/view?embed')">✦ LOGO / STICKERS</div>
+    </div>
+  </div>
+
+  <!-- ── CONGA CRITTERS MENU ── -->
+  <div class="window hidden" id="cc-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">IF SNAKE WAS A RACCOON PARTY</span><span onclick="closeProjMenu('cc-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('CONGA CRITTERS — CONCEPT ART', 'https://www.canva.com/design/DAHDkl8b_n0/aiNSjkqZHPKelZXIeoVTaw/view?embed')">✦ CONCEPT ART</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('CONGA CRITTERS — PLAY GAME', '')">✦ PLAY GAME</div>
+    </div>
+  </div>
+
+  <div class="window hidden" id="bs-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">MARCH TO THE BEAT OF YOUR OWN FACE</span><span onclick="closeProjMenu('bs-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('BUBBLE SKINCARE — MOTION GRAPHIC', 'https://i.imgur.com/QBfaKai.gif')">✦ FINAL</div>
+      <div class="dialog-btn" onclick="openTeamWindow('BUBBLE SKINCARE')">✦ TEAM</div>
+    </div>
+  </div>
+
+  <div class="window hidden" id="lavande-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">SWEET LIKE LAVANDE</span><span onclick="closeProjMenu('lavande-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('LAVANDE — LOGO + ASSETS', 'https://www.canva.com/design/DAGx8qCk-Zg/9rmU0CK9MZmLGtrZiUkloA/view?embed')">✦ LOGO + ASSETS</div>
+    </div>
+  </div>
+
+  <div class="window hidden" id="reverb-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">REBUILD A CITY'S SOUL THROUGH<br>RAVES, RITUALS, AND RADICAL CARE</span><span onclick="closeProjMenu('reverb-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('REVERB — CONCEPT ART', 'https://i.imgur.com/FXjhtPm.gif')">✦ CONCEPT ART</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('REVERB — GDD', '')">✦ GDD</div>
+    </div>
+  </div>
+
+  <!-- ── GAVIN AFT MENU ── -->
+
+  <!-- ── COVEN COLLECTIVE MENU ── -->
+  <div class="window hidden" id="coven-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">SUGAR, SPICE, AND EVERYTHING NICE</span><span onclick="closeProjMenu('coven-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openCovenGallery()">✦ ANIMATIONS</div>
+    </div>
+  </div>
+
+  <!-- ── WHO IS SONJA WINDOW ── -->
+  <div class="window hidden" id="who-window" role="dialog" aria-label="Who is Sonja window" style="top:100px;right:460px;left:auto;width:300px;">
+    <div class="titlebar" onmousedown="startDrag(event,'who-window')" ontouchstart="startDrag(event,'who-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('who-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('who-window')">✕</div>
+      </div>
+      <div class="titlebar-text">WHO IS SONJA?</div>
+    </div>
+    <div class="win-body" style="padding:14px 0;overflow:hidden;">
+      <div style="display:flex;justify-content:center;padding:10px 0 6px;">
+        <img src="https://i.imgur.com/KjhStkM.png" style="width:120px;image-rendering:pixelated;animation:floatUpDown 3s ease-in-out infinite;" />
+      </div>
+      <div style="white-space:nowrap;display:inline-block;animation:marquee 30s linear infinite;font-family:var(--font);font-size:14px;color:rgba(255,51,161,0.85);letter-spacing:2px;">
+        FARMER'S DAUGHTER <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> CAT MOM TO MAX AND SOFIE <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> POLE DANCER <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> DISABLED BADDIE <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> FILM STUDENT <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> COFFEE SNOB <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> FKA TWIGS FANGIRL <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> ARIES SUN / TAURUS MOON / SCORPIO RISING / PISCES STELLIUM <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span>&nbsp;
+        FARMER'S DAUGHTER <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> CAT MOM TO MAX AND SOFIE <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> POLE DANCER <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> DISABLED BADDIE <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> FILM STUDENT <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> COFFEE SNOB <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> FKA TWIGS FANGIRL <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span> ARIES SUN / TAURUS MOON / SCORPIO RISING / PISCES STELLIUM <span style="color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);margin:0 8px;">✦</span>&nbsp;
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TEAM WINDOW ── -->
+  <div class="window hidden" id="team-window" role="dialog" aria-label="Team window" style="top:100px;left:calc(50% - 140px);width:340px;">
+    <div class="titlebar" onmousedown="startDrag(event,'team-window')" ontouchstart="startDrag(event,'team-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('team-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('team-window')">✕</div>
+      </div>
+      <div class="titlebar-text" id="team-window-title">TEAM</div>
+    </div>
+    <div class="win-body" id="team-window-body" style="padding:10px 14px;display:flex;flex-direction:column;gap:8px;">
+    </div>
+  </div>
+
+  <!-- ── ABOUT WINDOW ── -->
+  <div class="window about-window hidden" id="about-window" role="dialog" aria-label="About window">
+    <div class="titlebar" onmousedown="startDrag(event,'about-window')" ontouchstart="startDrag(event,'about-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('about-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('about-window')">✕</div>
+        <div class="tb-btn" onclick="toggleCollapse('about-window')" role="button" tabindex="0" aria-label="Minimize window" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCollapse('about-window')">─</div>
+      </div>
+      <div class="titlebar-text">DREAMWEAVE_STUDIO.TXT</div>
+    </div>
+    <div class="win-body">
+      <div class="about-body">
+        <div class="about-label">DREAMWEAVE STUDIO</div>
+        <hr class="about-divider">
+        <p>Welcome to Dreamweave Studio. I'm <span onclick="openWindow('who-window')" style="color:var(--pink);text-shadow:0 0 8px var(--pink),0 0 16px var(--pink),0 0 30px var(--pink);cursor:none;">SONJA SCHOUTEN</span>, a multidisciplinary artist and designer with focuses on creative direction, digital design, pixel art, and branding.</p>
+        <p>Working in video, photo, graphic, and video game mediums, I love to infuse nostalgia and play into my projects.</p>
+        <p>Tell me all about your project dreams! I work with a team of highly skilled collaborators to weave your dreams into reality.</p>
+        <hr class="about-divider">
+        <div class="about-label">COLLABORATORS</div>
+        <br>
+        <p style="font-size:12px;letter-spacing:1px;line-height:2;">
+          Caitlin Acken Taylor — @oakandbone<br>
+          Daniel Taggart-Hodge — @dth.35mm<br>
+          Kitty Zhang — @kittywithphotography<br>
+          Danielle Acken — @dlackenphotos<br>
+          Sandy Rossignol — @adsfortargeting
+        </p>
+        <hr class="about-divider">
+        <div class="about-label">LOCATION</div>
+        <br>
+        <p style="font-size:12px;letter-spacing:1px;">Victoria, BC · Canada</p>
+      </div>
+    </div>
+    <div class="win-statusbar">
+      <span>READ-ONLY</span>
+      <span>DREAMWEAVE STUDIO</span>
+    </div>
+    <div class="resize-handle resize-se" onmousedown="startResize(event,'about-window','se')" ontouchstart="startResize(event,'about-window','se')"></div>
+    <div class="resize-handle resize-e"  onmousedown="startResize(event,'about-window','e')" ontouchstart="startResize(event,'about-window','e')"></div>
+    <div class="resize-handle resize-s"  onmousedown="startResize(event,'about-window','s')" ontouchstart="startResize(event,'about-window','s')"></div>
+  </div>
+
+  <!-- ── CONTACT WINDOW ── -->
+  <div class="window contact-window hidden" id="contact-window" role="dialog" aria-label="Contact window">
+    <div class="titlebar" onmousedown="startDrag(event,'contact-window')" ontouchstart="startDrag(event,'contact-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('contact-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('contact-window')">✕</div>
+        <div class="tb-btn" onclick="toggleCollapse('contact-window')" role="button" tabindex="0" aria-label="Minimize window" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCollapse('contact-window')">─</div>
+      </div>
+      <div class="titlebar-text">CONTACT</div>
+    </div>
+    <div class="win-body">
+      <div class="dialog-body">
+        <div class="dialog-msg">commissions · collabs · inquiries · love letters</div>
+        <div class="dialog-field">
+          <label>NAME</label>
+          <input type="text" id="contact-name" placeholder="your name_">
+        </div>
+        <div class="dialog-field">
+          <label>EMAIL</label>
+          <input type="text" id="contact-email" placeholder="your@email.com_">
+        </div>
+        <div class="dialog-field">
+          <label>MESSAGE</label>
+          <textarea rows="4" id="contact-message" placeholder="tell me about the project..._"></textarea>
+        </div>
+        <div class="dialog-btns">
+          <div class="dialog-btn" onclick="closeWindow('contact-window')">CANCEL</div>
+          <div class="dialog-btn primary" onclick="sendContact()">SEND →</div>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle resize-se" onmousedown="startResize(event,'contact-window','se')" ontouchstart="startResize(event,'contact-window','se')"></div>
+    <div class="resize-handle resize-e"  onmousedown="startResize(event,'contact-window','e')" ontouchstart="startResize(event,'contact-window','e')"></div>
+    <div class="resize-handle resize-s"  onmousedown="startResize(event,'contact-window','s')" ontouchstart="startResize(event,'contact-window','s')"></div>
+  </div>
+
+  <!-- ── MUSIC PLAYER WINDOW ── -->
+  <div class="window player-window" id="player-window" role="dialog" aria-label="Music Player window">
+    <div class="titlebar" onmousedown="startDrag(event,'player-window')" ontouchstart="startDrag(event,'player-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('player-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('player-window')">✕</div>
+        <div class="tb-btn" onclick="toggleCollapse('player-window')" role="button" tabindex="0" aria-label="Minimize window" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCollapse('player-window')">─</div>
+      </div>
+      <div class="titlebar-text">NOW PLAYING</div>
+    </div>
+    <div class="win-body player-body">
+      <!-- hidden SoundCloud iframe — src loaded on enterSite() -->
+      <iframe id="sc-iframe" title="SoundCloud music player"
+        data-src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/dreamweavestudio/sets/dreamweave&color=%23ff33a1&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"
+        style="width:1px;height:1px;position:absolute;opacity:0;pointer-events:none;"
+        allow="autoplay">
+      </iframe>
+      <div class="player-marquee-wrap">
+        <div class="player-marquee" id="player-marquee" aria-live="polite" aria-label="Now playing">
+          NOT WHAT I NEEDED — CAR SEAT HEADREST &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp; NOT WHAT I NEEDED — CAR SEAT HEADREST &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+        </div>
+      </div>
+      <div class="player-progress-wrap">
+        <div class="player-progress-bar">
+          <div class="player-progress-fill" id="player-fill"></div>
+        </div>
+        <div class="player-times">
+          <span id="player-current">0:00</span>
+          <span id="player-duration">--:--</span>
+        </div>
+      </div>
+      <div class="player-controls">
+        <div class="player-btn" onclick="scPrev()" role="button" tabindex="0" aria-label="Previous track" onkeydown="if(event.key==='Enter'||event.key===' ')scPrev()">⏮</div>
+        <div class="player-btn player-btn-main" id="play-btn" onclick="scToggle()" role="button" tabindex="0" aria-label="Play or pause" onkeydown="if(event.key==='Enter'||event.key===' ')scToggle()">▶</div>
+        <div class="player-btn" onclick="scNext()" role="button" tabindex="0" aria-label="Next track" onkeydown="if(event.key==='Enter'||event.key===' ')scNext()">⏭</div>
+      </div>
+      <div class="player-vol-row">
+        <span class="player-vol-label">VOL</span>
+        <input type="range" class="player-vol-slider" id="vol-slider" aria-label="Volume" min="0" max="100" value="80" oninput="scVolume(this.value)">
+      </div>
+    </div>
+    <div class="resize-handle resize-se" onmousedown="startResize(event,'player-window','se')" ontouchstart="startResize(event,'player-window','se')"></div>
+  </div>
+
+  <!-- ── PROJECT VIEWER WINDOW ── -->
+  <div class="window proj-viewer-window hidden" id="proj-viewer-window" role="dialog" aria-label="Project Viewer window" style="top:80px;left:calc(50% - 40%);">
+    <div class="titlebar" onmousedown="startDrag(event,'proj-viewer-window')" ontouchstart="startDrag(event,'proj-viewer-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('proj-viewer-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('proj-viewer-window')">✕</div>
+        <div class="tb-btn" onclick="toggleCollapse('proj-viewer-window')" role="button" tabindex="0" aria-label="Minimize window" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCollapse('proj-viewer-window')">─</div>
+      </div>
+      <div class="titlebar-text" id="proj-viewer-title">PROJECT</div>
+    </div>
+    <div class="win-body" style="padding:0;flex:1;overflow:hidden;">
+      <iframe id="proj-viewer-iframe" title="Project viewer" src="" loading="lazy" style="width:100%;height:100%;border:none;display:block;"></iframe>
+    </div>
+    <div class="resize-handle resize-se" onmousedown="startResize(event,'proj-viewer-window','se')" ontouchstart="startResize(event,'proj-viewer-window','se')"></div>
+    <div class="resize-handle resize-e"  onmousedown="startResize(event,'proj-viewer-window','e')"  ontouchstart="startResize(event,'proj-viewer-window','e')"></div>
+    <div class="resize-handle resize-s"  onmousedown="startResize(event,'proj-viewer-window','s')"  ontouchstart="startResize(event,'proj-viewer-window','s')"></div>
+  </div>
+
+  <!-- ── PAINT WINDOW ── -->
+  <div class="window hidden" id="paint-window" role="dialog" aria-label="Paint window" style="top:70px;left:calc(50% - 45%);width:640px;height:520px;">
+    <div class="titlebar" onmousedown="startDrag(event,'paint-window')" ontouchstart="startDrag(event,'paint-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('paint-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('paint-window')">✕</div>
+        <div class="tb-btn" onclick="toggleCollapse('paint-window')" role="button" tabindex="0" aria-label="Minimize window" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCollapse('paint-window')">─</div>
+      </div>
+      <div class="titlebar-text">PAINT.EXE</div>
+    </div>
+    <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
+      <!-- Left toolbar -->
+      <div id="paint-toolbar" style="width:52px;background:rgba(16,8,5,0.98);border-right:1px solid var(--pink-border);display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;flex-shrink:0;">
+        <div class="pt-tool active-tool" id="tool-pencil" onclick="setPaintTool('pencil')" title="PENCIL">✏</div>
+        <div class="pt-tool" id="tool-eraser" onclick="setPaintTool('eraser')" title="ERASER" style="font-size:11px;letter-spacing:0;">ERASE</div>
+        <div class="pt-tool" id="tool-fill" onclick="setPaintTool('fill')" title="FILL" style="font-size:11px;letter-spacing:0;">FILL</div>
+        <div class="pt-tool" id="tool-eyedropper" onclick="setPaintTool('eyedropper')" title="EYEDROPPER" style="font-size:11px;letter-spacing:0;">PICK</div>
+        <div class="pt-tool" id="tool-line" onclick="setPaintTool('line')" style="font-size:11px;letter-spacing:0;">LINE</div>
+        <div class="pt-tool" id="tool-rect" onclick="setPaintTool('rect')" style="font-size:11px;letter-spacing:0;">RECT</div>
+        <div class="pt-tool" id="tool-glow" onclick="setPaintTool('glow')" style="font-size:11px;letter-spacing:0;">GLOW</div>
+        <div class="pt-tool" id="tool-spray" onclick="setPaintTool('spray')" style="font-size:11px;letter-spacing:0;">SPRAY</div>
+        <div style="width:36px;border-top:1px solid var(--pink-border);margin:4px 0;"></div>
+        <!-- Brush sizes -->
+        <div class="pt-size active-size" id="size-1" onclick="setPaintSize(1)" style="width:4px;height:4px;border-radius:50%;background:var(--pink);margin:5px auto;cursor:none;"></div>
+        <div class="pt-size" id="size-3" onclick="setPaintSize(3)" style="width:8px;height:8px;border-radius:50%;background:var(--pink-dim);margin:5px auto;cursor:none;"></div>
+        <div class="pt-size" id="size-6" onclick="setPaintSize(6)" style="width:13px;height:13px;border-radius:50%;background:var(--pink-dim);margin:5px auto;cursor:none;"></div>
+        <div class="pt-size" id="size-12" onclick="setPaintSize(12)" style="width:20px;height:20px;border-radius:50%;background:var(--pink-dim);margin:5px auto;cursor:none;"></div>
+        <div style="width:36px;border-top:1px solid var(--pink-border);margin:4px 0;"></div>
+        <div class="pt-tool" onclick="paintClear()" style="font-size:10px;letter-spacing:0;padding:3px 2px;">CLR</div>
+        <div class="pt-tool" onclick="paintSave()" style="font-size:10px;letter-spacing:0;padding:3px 2px;">SAV</div>
+      </div>
+      <!-- Main area: canvas top, palette bottom -->
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+        <!-- Status bar -->
+        <div style="display:flex;align-items:center;gap:6px;padding:3px 8px;background:rgba(16,8,5,0.98);border-bottom:1px solid var(--pink-border);flex-shrink:0;">
+          <span style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:1px;">COLOUR:</span>
+          <div id="paint-active-colour" style="width:16px;height:16px;border:1px solid var(--pink-border);background:#ff33a1;flex-shrink:0;"></div>
+          <span id="paint-colour-hex" style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:1px;">#FF33A1</span>
+          <span style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:1px;margin-left:8px;">TOOL:</span>
+          <span id="paint-tool-label" style="font-family:var(--font);font-size:11px;color:var(--pink);letter-spacing:1px;">PENCIL</span>
+        </div>
+        <!-- Canvas -->
+        <div style="flex:1;overflow:hidden;position:relative;z-index:auto;background:#100805;">
+          <canvas id="paint-canvas" style="display:block;cursor:none;image-rendering:pixelated;"></canvas>
+        </div>
+        <!-- Colour palette at bottom -->
+        <div id="paint-palette" style="display:flex;flex-wrap:wrap;gap:2px;padding:5px 6px;background:rgba(16,8,5,0.98);border-top:1px solid var(--pink-border);flex-shrink:0;"></div>
+      </div>
+    </div>
+    <div class="resize-handle resize-se" onmousedown="startResize(event,'paint-window','se')" ontouchstart="startResize(event,'paint-window','se')"></div>
+    <div class="resize-handle resize-e"  onmousedown="startResize(event,'paint-window','e')"  ontouchstart="startResize(event,'paint-window','e')"></div>
+    <div class="resize-handle resize-s"  onmousedown="startResize(event,'paint-window','s')"  ontouchstart="startResize(event,'paint-window','s')"></div>
+  </div>
+
+  <!-- ── SOLITAIRE WINDOW ── -->
+  <div class="window hidden" id="solitaire-window" role="dialog" aria-label="Solitaire window" style="top:50px;left:calc(50% - 45%);width:620px;height:460px;">
+    <div class="titlebar" onmousedown="startDrag(event,'solitaire-window')" ontouchstart="startDrag(event,'solitaire-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('solitaire-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('solitaire-window')">✕</div>
+        <div class="tb-btn" onclick="toggleCollapse('solitaire-window')" role="button" tabindex="0" aria-label="Minimize window" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCollapse('solitaire-window')">─</div>
+      </div>
+      <div class="titlebar-text">SOLITAIRE.EXE</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:rgba(16,8,5,0.98);border-bottom:1px solid var(--pink-border);flex-shrink:0;">
+      <div class="pt-tool" onclick="solNewGame()" style="font-size:11px;letter-spacing:0;padding:3px 8px;">NEW GAME</div>
+      <span id="sol-msg" style="font-family:var(--font);font-size:12px;color:var(--pink-dim);letter-spacing:1px;margin-left:8px;"></span>
+    </div>
+    <div id="sol-board" style="flex:1;overflow:hidden;position:relative;z-index:auto;padding:10px;box-sizing:border-box;user-select:none;"></div>
+    <div class="resize-handle resize-se" onmousedown="startResize(event,'solitaire-window','se')" ontouchstart="startResize(event,'solitaire-window','se')"></div>
+    <div class="resize-handle resize-e"  onmousedown="startResize(event,'solitaire-window','e')"  ontouchstart="startResize(event,'solitaire-window','e')"></div>
+    <div class="resize-handle resize-s"  onmousedown="startResize(event,'solitaire-window','s')"  ontouchstart="startResize(event,'solitaire-window','s')"></div>
+  </div>
+
+  <!-- ── ARCHIVE WINDOW ── -->
+  <div class="window hidden" id="archive-window" role="dialog" aria-label="Archive window" style="top:70px;left:200px;width:420px;height:400px;">
+    <div class="titlebar" onmousedown="startDrag(event,'archive-window')" ontouchstart="startDrag(event,'archive-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('archive-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('archive-window')">✕</div>
+        <div class="tb-btn" onclick="toggleCollapse('archive-window')" role="button" tabindex="0" aria-label="Minimize window" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCollapse('archive-window')">─</div>
+      </div>
+      <div class="titlebar-text">ARCHIVE</div>
+    </div>
+    <div class="folder-toolbar" style="border-bottom:1px solid var(--pink-border);padding:3px 8px;font-size:12px;color:var(--pink-dim);letter-spacing:1px;background:rgba(255,51,161,0.04);display:flex;align-items:center;gap:6px;">
+      <span id="archive-path" style="cursor:none;"><span style="filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5);display:inline-block;">📂</span> ARCHIVE</span>
+    </div>
+    <div class="win-body" id="archive-body" style="padding:8px;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start;">
+    </div>
+    <div class="win-statusbar">
+      <span id="archive-status">0 ITEMS</span>
+      <span>DREAMWEAVE ARCHIVE</span>
+    </div>
+    <div class="resize-handle resize-se" onmousedown="startResize(event,'archive-window','se')" ontouchstart="startResize(event,'archive-window','se')"></div>
+    <div class="resize-handle resize-e"  onmousedown="startResize(event,'archive-window','e')"  ontouchstart="startResize(event,'archive-window','e')"></div>
+    <div class="resize-handle resize-s"  onmousedown="startResize(event,'archive-window','s')"  ontouchstart="startResize(event,'archive-window','s')"></div>
+  </div>
+
+  <!-- ── NOTEPAD VIEWER WINDOW ── -->
+  <div class="window hidden" id="notepad-window" role="dialog" aria-label="Notepad window" style="top:80px;left:240px;width:380px;height:460px;">
+    <div class="titlebar" onmousedown="startDrag(event,'notepad-window')" ontouchstart="startDrag(event,'notepad-window')">
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closeWindow('notepad-window')" role="button" tabindex="0" aria-label="Close window" onkeydown="if(event.key==='Enter'||event.key===' ')closeWindow('notepad-window')">✕</div>
+        <div class="tb-btn" onclick="toggleCollapse('notepad-window')" role="button" tabindex="0" aria-label="Minimize window" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCollapse('notepad-window')">─</div>
+      </div>
+      <div class="titlebar-text" id="notepad-title">NOTEPAD</div>
+    </div>
+    <div class="folder-toolbar" style="border-bottom:1px solid var(--pink-border);padding:3px 8px;font-size:11px;color:var(--pink-dim);letter-spacing:1px;background:rgba(255,51,161,0.04);display:flex;justify-content:space-between;">
+      <span>FILE</span>
+      <span id="notepad-date"></span>
+    </div>
+    <div class="win-body" id="notepad-body" style="padding:16px 20px;font-family:var(--font);font-size:13px;color:var(--pink);line-height:1.6;letter-spacing:0.5px;white-space:pre-wrap;overflow-y:auto;"></div>
+    <div class="win-statusbar">
+      <span>READ ONLY</span>
+      <span>DREAMWEAVE NOTEPAD</span>
+    </div>
+    <div class="resize-handle resize-se" onmousedown="startResize(event,'notepad-window','se')" ontouchstart="startResize(event,'notepad-window','se')"></div>
+    <div class="resize-handle resize-e"  onmousedown="startResize(event,'notepad-window','e')"  ontouchstart="startResize(event,'notepad-window','e')"></div>
+    <div class="resize-handle resize-s"  onmousedown="startResize(event,'notepad-window','s')"  ontouchstart="startResize(event,'notepad-window','s')"></div>
+  </div>
+
+<div id="start-menu" class="start-menu" role="menu" aria-label="Start menu">
+  <div class="start-menu-header">
+    <div class="name">DREAMWEAVE</div>
+    <div class="sub">STUDIO · VICTORIA BC</div>
+  </div>
+  <div class="start-menu-item" role="menuitem" tabindex="0" onclick="openWindow('folder-window')"><span class="sm-icon">🪩</span> PORTFOLIO</div>
+  <div class="start-menu-item" role="menuitem" tabindex="0" onclick="openWindow('about-window')"><span class="sm-icon">✨</span> ABOUT</div>
+  <div class="start-menu-item" role="menuitem" tabindex="0" onclick="openWindow('contact-window')"><span class="sm-icon">💌</span> CONTACT</div>
+  <div class="start-menu-item" role="menuitem" tabindex="0" onclick="openWindow('player-window')"><span class="sm-icon">🎵</span> PLAYER</div>
+  <div class="start-menu-item" role="menuitem" tabindex="0" onclick="openWindow('paint-window')"><span class="sm-icon">🎨</span> PAINT</div>
+  <div class="start-menu-item" role="menuitem" tabindex="0" onclick="openWindow('solitaire-window')"><span class="sm-icon">♠️</span> SOLITAIRE</div>
+  <div class="start-menu-item" role="menuitem" tabindex="0" onclick="openWindow('archive-window')"><span class="sm-icon">📂</span> ARCHIVE</div>
+  <hr class="start-menu-sep">
+  <div class="start-menu-item" role="menuitem" tabindex="0" onclick="shutDown()"><span class="sm-icon">⏻</span> GOODBYE :)</div>
+</div>
+
+<!-- TASKBAR -->
+<div class="taskbar" role="navigation" aria-label="Taskbar">
+  <div class="start-btn" onclick="toggleStartMenu()" role="button" tabindex="0" aria-label="Start menu" aria-haspopup="true" onkeydown="if(event.key==='Enter'||event.key===' ')toggleStartMenu()">✦ DREAMWEAVE</div>
+  <div class="taskbar-divider"></div>
+  <div class="taskbar-tabs" id="taskbar-tabs"></div>
+  <div class="system-tray">
+    <div class="taskbar-clock" id="clock">00:00</div>
+  </div>
+</div>
+
+<script>
+const cursorDefault = `<polygon points="0,0 0,16 4,12 7,19 9,18 6,11 11,11" fill="#291d14"/><polygon points="1,1 1,14 4,11 7,17 8,17 5,10 10,10 1,1" fill="#ff33a1"/>`;
+const cursorMove = `
+  <rect x="4" y="0" width="1" height="2" fill="#ff33a1"/>
+  <rect x="3" y="1" width="3" height="1" fill="#ff33a1"/>
+  <rect x="4" y="5" width="1" height="2" fill="#ff33a1"/>
+  <rect x="3" y="6" width="3" height="1" fill="#ff33a1"/>
+  <rect x="0" y="3" width="2" height="1" fill="#ff33a1"/>
+  <rect x="1" y="2" width="1" height="3" fill="#ff33a1"/>
+  <rect x="5" y="3" width="2" height="1" fill="#ff33a1"/>
+  <rect x="6" y="2" width="1" height="3" fill="#ff33a1"/>
+  <rect x="3" y="3" width="1" height="1" fill="#ff33a1"/>
+  <rect x="3" y="4" width="1" height="1" fill="#ff33a1"/>
+  <rect x="4" y="3" width="1" height="2" fill="#ff33a1"/>
+`;
+
+function setCursorMove() {
+  const svg = document.querySelector('#cursor svg');
+  svg.setAttribute('viewBox', '0 0 8 8');
+  svg.setAttribute('width', '16'); svg.setAttribute('height', '16');
+  svg.innerHTML = cursorMove;
+}
+function setCursorDefault() {
+  const svg = document.querySelector('#cursor svg');
+  svg.setAttribute('viewBox', '0 0 13 20');
+  svg.setAttribute('width', '13'); svg.setAttribute('height', '20');
+  svg.innerHTML = cursorDefault;
+}
+
+// ── Star trail ──
+(function() {
+  const canvas = document.getElementById('star-trail');
+  const ctx = canvas.getContext('2d');
+  const stars = [];
+
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function drawPixelStar(x, y, size, alpha) {
+    ctx.fillStyle = `rgba(255,51,161,${alpha})`;
+    // centre
+    ctx.fillRect(x, y, size, size);
+    // arms
+    ctx.fillStyle = `rgba(255,51,161,${alpha * 0.7})`;
+    ctx.fillRect(x - size, y, size, size);
+    ctx.fillRect(x + size, y, size, size);
+    ctx.fillRect(x, y - size, size, size);
+    ctx.fillRect(x, y + size, size, size);
+  }
+
+  function drawPixelDot(x, y, size, alpha) {
+    ctx.fillStyle = `rgba(255,51,161,${alpha})`;
+    ctx.fillRect(x, y, size, size);
+  }
+
+  let sparkleRunning = false;
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = stars.length - 1; i >= 0; i--) {
+      const s = stars[i];
+      s.alpha -= s.decay;
+      if (s.alpha <= 0) { stars.splice(i, 1); continue; }
+      if (s.type === 'plus') drawPixelStar(s.x, s.y, s.size, s.alpha);
+      else drawPixelDot(s.x, s.y, s.size, s.alpha);
+    }
+    if (stars.length > 0) {
+      requestAnimationFrame(tick);
+    } else {
+      sparkleRunning = false;
+    }
+  }
+
+  let lastSparkle = 0;
+  document.addEventListener('mousemove', e => {
+    const now = performance.now();
+    if (now - lastSparkle < 60) return; // was 40ms, now 60ms
+    lastSparkle = now;
+    if (Math.random() > 0.4) return;
+    if (stars.length > 20) return; // was 30, now 20
+    stars.push({
+      x: e.clientX + (Math.random() * 10 - 5),
+      y: e.clientY + (Math.random() * 10 - 5),
+      size: Math.random() > 0.6 ? 3 : 2,
+      alpha: 0.7 + Math.random() * 0.3,
+      decay: 0.025 + Math.random() * 0.03,
+      type: Math.random() > 0.5 ? 'plus' : 'dot'
+    });
+    if (!sparkleRunning) { sparkleRunning = true; requestAnimationFrame(tick); }
+  });
+})();
+// ── SoundCloud Player ──
+let scWidget, scPlaying = false;
+
+window.addEventListener('load', () => {
+  // Preload SC API script but don't init widget yet (iframe has no src until enterSite)
+  const tag = document.createElement('script');
+  tag.src = 'https://w.soundcloud.com/player/api.js';
+  document.head.appendChild(tag);
+});
+
+function initSCWidget() {
+  if (scWidget || typeof SC === 'undefined') return;
+  scWidget = SC.Widget(document.getElementById('sc-iframe'));
+  scWidget.bind(SC.Widget.Events.READY, () => {
+    scWidget.setVolume(80);
+    scWidget.getDuration(d => {
+      document.getElementById('player-duration').textContent = fmtTime(d / 1000);
+    });
+    updateMarquee();
+  });
+  scWidget.bind(SC.Widget.Events.PLAY, () => {
+    scPlaying = true;
+    document.getElementById('play-btn').textContent = '⏸';
+    updateMarquee();
+  });
+  scWidget.bind(SC.Widget.Events.PAUSE, () => {
+    scPlaying = false;
+    document.getElementById('play-btn').textContent = '▶';
+  });
+  scWidget.bind(SC.Widget.Events.PLAY_PROGRESS, obj => {
+    scWidget.getDuration(d => {
+      document.getElementById('player-current').textContent = fmtTime(obj.currentPosition / 1000);
+      document.getElementById('player-fill').style.width = ((obj.currentPosition / d) * 100) + '%';
+    });
+  });
+  scWidget.bind(SC.Widget.Events.FINISH, () => {
+    scWidget.next();
+    setTimeout(() => {
+      scWidget.seekTo(0);
+      scWidget.play();
+      scPlaying = true;
+      document.getElementById('play-btn').textContent = '▐▐';
+      document.getElementById('player-fill').style.width = '0%';
+      document.getElementById('player-current').textContent = '0:00';
+      updateMarquee();
+    }, 300);
+  });
+}
+
+function scToggle() { if (scWidget) scPlaying ? scWidget.pause() : scWidget.play(); }
+function scPrev() {
+  if (!scWidget) return;
+  const wasPlaying = scPlaying;
+  scWidget.prev();
+  setTimeout(() => {
+    scWidget.seekTo(0);
+    updateMarquee();
+    if (!wasPlaying) scWidget.pause();
+  }, 300);
+}
+function scNext() {
+  if (!scWidget) return;
+  const wasPlaying = scPlaying;
+  scWidget.next();
+  setTimeout(() => {
+    scWidget.seekTo(0);
+    updateMarquee();
+    if (!wasPlaying) scWidget.pause();
+  }, 300);
+}
+function scVolume(val) { if (scWidget) scWidget.setVolume(parseInt(val)); }
+function fmtTime(s) { return Math.floor(s/60) + ':' + String(Math.floor(s%60)).padStart(2,'0'); }
+function updateMarquee() {
+  if (!scWidget) return;
+  scWidget.getCurrentSound(sound => {
+    if (!sound) return;
+    const title = (sound.title || 'UNKNOWN').toUpperCase();
+    const artist = (sound.user && sound.user.username ? sound.user.username : '').toUpperCase();
+    const text = artist ? title + ' — ' + artist : title;
+    const sep = ' &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp; ';
+    document.getElementById('player-marquee').innerHTML = text + sep + text + sep;
+  });
+}
+
+function enterSite() {
+  const splash = document.getElementById('splash');
+  splash.style.transition = 'opacity 0.8s ease';
+  splash.style.opacity = '0';
+  setTimeout(() => {
+    splash.style.display = 'none';
+    // Clear splash canvas to free memory
+    const sc = document.getElementById('splash-binary-canvas');
+    if (sc) { sc.width = 0; sc.height = 0; }
+  }, 800);
+  // Stop splash binary rain, start desktop rain
+  if (splashRainInterval) { clearInterval(splashRainInterval); splashRainInterval = null; }
+  if (!desktopRainInterval) { window.desktopRainInit(); desktopRainInterval = setInterval(window.desktopRainDraw, 200); }
+  // Defer-load SoundCloud iframe
+  const scIframe = document.getElementById('sc-iframe');
+  if (scIframe && scIframe.dataset.src && !scIframe.hasAttribute('src')) {
+    scIframe.src = scIframe.dataset.src;
+    scIframe.addEventListener('load', () => { initSCWidget(); }, { once: true });
+  }
+}
+// Shut down — return to splash
+function shutDown() {
+  closeStartMenu();
+  if (scWidget && scPlaying) { scWidget.pause(); }
+  const splash = document.getElementById('splash');
+  splash.style.display = 'flex';
+  splash.classList.remove('leaving');
+  // force reflow so the animation resets cleanly
+  void splash.offsetWidth;
+  splash.style.opacity = '1';
+  splash.style.pointerEvents = 'auto';
+  // Restart splash binary rain, stop desktop rain
+  if (!splashRainInterval) { window.splashRainInit(); splashRainInterval = setInterval(window.splashRainDraw, 150); }
+  if (desktopRainInterval) { clearInterval(desktopRainInterval); desktopRainInterval = null; }
+}
+
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+
+// Binary rain — desktop (only runs when on desktop)
+var desktopRainInterval = null;
+(function() {
+  const canvas = document.getElementById('binary-canvas');
+  const ctx = canvas.getContext('2d');
+  const fs = 11;
+  let cols, drops;
+  function init() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols = Math.floor(canvas.width / fs);
+    drops = Array.from({length: cols}, () => Math.random() * -60);
+  }
+  function draw() {
+    ctx.fillStyle = 'rgba(41,29,20,0.1)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ff33a1';
+    ctx.font = fs + 'px VT323, monospace';
+    for (let i = 0; i < drops.length; i++) {
+      ctx.fillText(Math.random() > 0.5 ? '1' : '0', i * fs, drops[i] * fs);
+      if (drops[i] * fs > canvas.height && Math.random() > 0.97) drops[i] = 0;
+      drops[i] += 0.35;
+    }
+  }
+  window.desktopRainInit = init;
+  window.desktopRainDraw = draw;
+  window.addEventListener('resize', () => { if (desktopRainInterval) init(); });
+  init();
+})();
+
+// Binary rain — splash (only runs while splash is visible)
+var splashRainInterval = null;
+(function() {
+  const canvas = document.getElementById('splash-binary-canvas');
+  const ctx = canvas.getContext('2d');
+  const fs = 11;
+  let cols, drops;
+  function init() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    cols = Math.floor(canvas.width / fs);
+    drops = Array.from({length: cols}, () => Math.random() * -60);
+  }
+  function draw() {
+    ctx.fillStyle = 'rgba(41,29,20,0.1)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ff33a1';
+    ctx.font = fs + 'px VT323, monospace';
+    for (let i = 0; i < drops.length; i++) {
+      ctx.fillText(Math.random() > 0.5 ? '1' : '0', i * fs, drops[i] * fs);
+      if (drops[i] * fs > canvas.height && Math.random() > 0.97) drops[i] = 0;
+      drops[i] += 0.35;
+    }
+  }
+  window.splashRainInit = init;
+  window.splashRainDraw = draw;
+  window.addEventListener('resize', () => { if (splashRainInterval) init(); });
+  init();
+  splashRainInterval = setInterval(draw, 150);
+})();
+
+// ── Cat swirl stars ──
+(function() {
+  const backCanvas = document.getElementById('cat-stars-back');
+  const frontCanvas = document.getElementById('cat-stars-front');
+  const backCtx = backCanvas.getContext('2d');
+  const frontCtx = frontCanvas.getContext('2d');
+  const NUM_STARS = 12;
+  const stars = [];
+
+  // Pre-render glow sprites (avoids shadowBlur every frame)
+  function makeGlowSprite(size, bright) {
+    const pad = 16;
+    const c = document.createElement('canvas');
+    c.width = c.height = size + pad * 2;
+    const cx = c.getContext('2d');
+    cx.shadowColor = '#ff33a1';
+    cx.shadowBlur = bright ? 12 : 6;
+    cx.fillStyle = bright ? 'rgba(255,51,161,1)' : 'rgba(255,51,161,0.5)';
+    cx.fillRect(pad, pad, size, size);
+    // draw arms for plus
+    cx.fillRect(pad - size, pad, size, size);
+    cx.fillRect(pad + size, pad, size, size);
+    cx.fillRect(pad, pad - size, size, size);
+    cx.fillRect(pad, pad + size, size, size);
+    cx.shadowBlur = 0;
+    return { canvas: c, pad: pad };
+  }
+
+  const sprites = {
+    frontBig: makeGlowSprite(3, true),
+    frontSmall: makeGlowSprite(2, true),
+    backBig: makeGlowSprite(3, false),
+    backSmall: makeGlowSprite(2, false)
+  };
+
+  function initCanvases() {
+    const cat = document.getElementById('desktop-cat');
+    if (!cat) return;
+    const w = cat.offsetWidth || 180;
+    const h = cat.offsetHeight || 180;
+    backCanvas.width = frontCanvas.width = w;
+    backCanvas.height = frontCanvas.height = h;
+    backCanvas.style.width = frontCanvas.style.width = w + 'px';
+    backCanvas.style.height = frontCanvas.style.height = h + 'px';
+  }
+
+  for (let i = 0; i < NUM_STARS; i++) {
+    stars.push({
+      angle: (Math.PI * 2 / NUM_STARS) * i + Math.random() * 0.5,
+      radiusX: 40 + Math.random() * 50,
+      radiusY: 30 + Math.random() * 40,
+      speed: 0.004 + Math.random() * 0.006,
+      size: Math.random() > 0.5 ? 3 : 2,
+      alpha: 0.4 + Math.random() * 0.5,
+      drift: Math.random() * Math.PI * 2
+    });
+  }
+
+  function draw() {
+    const w = backCanvas.width;
+    const h = backCanvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    backCtx.clearRect(0, 0, w, h);
+    frontCtx.clearRect(0, 0, w, h);
+
+    for (const s of stars) {
+      s.angle += s.speed * 2.5;
+      s.drift += 0.005;
+      const x = cx + Math.cos(s.angle) * s.radiusX;
+      const y = cy + Math.sin(s.angle) * s.radiusY + Math.sin(s.drift) * 5;
+      const flicker = 0.7 + 0.3 * Math.sin(s.angle * 3);
+
+      const inFront = Math.sin(s.angle) > 0;
+      const ctx = inFront ? frontCtx : backCtx;
+      const sprite = inFront
+        ? (s.size === 3 ? sprites.frontBig : sprites.frontSmall)
+        : (s.size === 3 ? sprites.backBig : sprites.backSmall);
+
+      ctx.globalAlpha = s.alpha * flicker;
+      ctx.drawImage(sprite.canvas, x - sprite.pad, y - sprite.pad);
+    }
+    backCtx.globalAlpha = 1;
+    frontCtx.globalAlpha = 1;
+  }
+
+  initCanvases();
+  window.addEventListener('resize', initCanvases);
+  let lastCatDraw = 0;
+  let catRafId = null;
+  function catStarLoop(ts) {
+    catRafId = requestAnimationFrame(catStarLoop);
+    if (ts - lastCatDraw < 100) return; // ~10fps max
+    lastCatDraw = ts;
+    draw();
+  }
+  catRafId = requestAnimationFrame(catStarLoop);
+
+  // Pause all canvas animations when tab is hidden, resume when visible
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Pause cat stars
+      if (catRafId) { cancelAnimationFrame(catRafId); catRafId = null; }
+      // Pause desktop rain
+      if (desktopRainInterval) { clearInterval(desktopRainInterval); desktopRainInterval = null; window._rainWasPaused = true; }
+    } else {
+      // Resume cat stars
+      if (!catRafId) catRafId = requestAnimationFrame(catStarLoop);
+      // Resume desktop rain if it was running
+      if (window._rainWasPaused) {
+        window._rainWasPaused = false;
+        if (!desktopRainInterval) { window.desktopRainInit(); desktopRainInterval = setInterval(window.desktopRainDraw, 200); }
+      }
+    }
+  });
+})();
+
+// ── Archive (Finder) ──
+const ARCHIVE_DATA = {
+  name: 'ARCHIVE',
+  folders: [
+    { name: 'NECTAR NYMPH', items: [
+      { name: '@NECTAR.NYMPH', type: 'link', url: 'https://www.instagram.com/nectar.nymph/' },
+      { name: 'LOGO1', type: 'image', url: 'https://i.imgur.com/pnEqLrV.jpeg' },
+      { name: 'LOGO2', type: 'image', url: 'https://i.imgur.com/4ND4dcw.jpeg' },
+    ] },
+    { name: 'C4D ART', items: [
+      { name: 'ANIMATIONS', type: 'folder', items: [
+        { name: 'BRAIN BUST', type: 'image', url: 'https://i.imgur.com/XrLxVL6.gif' },
+        { name: 'ITT GIRL', type: 'image', url: 'https://i.imgur.com/xyNifVo.gif' },
+        { name: 'FOUNTAIN', type: 'image', url: 'https://i.imgur.com/FSSEqw9.gif' },
+        { name: 'WAVE POOL', type: 'image', url: 'https://i.imgur.com/sOIelZY.gif' },
+        { name: 'PEEL OUT', type: 'image', url: 'https://i.imgur.com/ApbWvLy.gif' },
+        { name: 'BALL DROP', type: 'image', url: 'https://i.imgur.com/6FcO3Ju.gif' },
+        { name: 'BALL OUT', type: 'image', url: 'https://i.imgur.com/u0FDaYU.gif' },
+        { name: 'GRAPE JUICE', type: 'image', url: 'https://i.imgur.com/H1cPIpE.gif' },
+      ] },
+      { name: 'STILLS', type: 'folder', items: [
+        { name: 'POOLBOY', type: 'image', url: 'https://i.imgur.com/lyFWFBC.png' },
+        { name: 'NIGHTCLUB', type: 'image', url: 'https://i.imgur.com/JMTVyc7.png' },
+        { name: 'LAVA LAMP', type: 'image', url: 'https://i.imgur.com/gfvsh2m.png' },
+        { name: 'FLOCK', type: 'image', url: 'https://i.imgur.com/EfLZ2GG.png' },
+        { name: 'CANDY SHOP', type: 'image', url: 'https://i.imgur.com/gzzYbhU.png' },
+        { name: 'STRAWBERRY', type: 'image', url: 'https://i.imgur.com/JimIcNL.png' },
+        { name: 'KEEP ME SAFE', type: 'image', url: 'https://i.imgur.com/aSv4IKB.png' },
+        { name: 'SACRED', type: 'image', url: 'https://i.imgur.com/zbuwql0.png' },
+        { name: 'SOUR', type: 'image', url: 'https://i.imgur.com/VHZAbbv.png' },
+        { name: 'PLANET SULLIZOID', type: 'image', url: 'https://i.imgur.com/TMkbcYh.png' },
+        { name: 'TELEPHONE', type: 'image', url: 'https://i.imgur.com/i5xcwug.png' },
+        { name: 'UNIDENTIFIED FLYING OBJECT', type: 'image', url: 'https://i.imgur.com/Qc0JOTJ.png' },
+        { name: 'MARSHMALLOW SUMMER', type: 'image', url: 'https://i.imgur.com/ti43xb4.png' },
+      ] },
+    ] },
+    { name: 'PROCREATE', items: [
+      { name: 'MULTITASKERS', type: 'folder', items: [
+        { name: 'BAR STAR', type: 'image', url: 'https://i.imgur.com/gPl6GfV.png' },
+        { name: '100% THAT WITCH', type: 'image', url: 'https://i.imgur.com/EahOC3x.jpeg' },
+        { name: 'BOSS STITCH', type: 'image', url: 'https://i.imgur.com/GnteJpo.jpeg' },
+        { name: 'GARDEN HOE', type: 'image', url: 'https://i.imgur.com/LiaG0Oh.jpeg' },
+        { name: 'LITTLE BRAT', type: 'image', url: 'https://i.imgur.com/0k7yQmY.jpeg' },
+        { name: 'SUGAR MAMA', type: 'image', url: 'https://i.imgur.com/VVmbbJq.jpeg' },
+      ] },
+      { name: 'SLUTTY FROGS', type: 'image', url: 'https://i.imgur.com/XzxtUHu.png' },
+      { name: 'HOMEBODY', type: 'image', url: 'https://i.imgur.com/8pvBbHn.jpeg' },
+      { name: 'POUT', type: 'image', url: 'https://i.imgur.com/ZOvBIfQ.jpeg' },
+      { name: 'SAILOR MOON CHALLENGE', type: 'image', url: 'https://i.imgur.com/cJ5c2NT.jpeg' },
+      { name: 'BLUE', type: 'image', url: 'https://i.imgur.com/bzygBV1.jpeg' },
+      { name: 'KAGOME', type: 'image', url: 'https://i.imgur.com/dqth0tT.jpeg' },
+      { name: 'THIRD EYE', type: 'image', url: 'https://i.imgur.com/zZ23EJO.jpeg' },
+      { name: 'MERIGEM LOGO', type: 'image', url: 'https://i.imgur.com/5mPTndt.jpeg' },
+      { name: 'CHERRY', type: 'image', url: 'https://i.imgur.com/wB2ZAFk.jpeg' },
+      { name: 'FRUIT DREAM', type: 'image', url: 'https://i.imgur.com/2OHvnfx.jpeg' },
+      { name: 'FIGURE 8', type: 'image', url: 'https://i.imgur.com/nHxfDsl.jpeg' },
+      { name: 'SAILOR MOON WIP', type: 'image', url: 'https://i.imgur.com/r8XosRo.png' },
+      { name: 'FKA TWIGS X MONONOKE', type: 'image', url: 'https://i.imgur.com/rXhR1di.jpeg' },
+      { name: 'CALL ME SUGAR LOGO', type: 'image', url: 'https://i.imgur.com/BHRSuWQ.jpeg' },
+    ] },
+    { name: 'POEMS', items: [
+      { name: 'FLOWERS IN THE VASE', type: 'poem', date: '07/29/2025', content: `My mind is a shattered vase\nBroken in pieces\nStuck in its ways\n\nI am the bouquet on the floor\nAs each day passes\nI dry out some more\n\nYou reach out to clean up the mess\nYou knocked it over\nYou tried your best\n\nYou recoil after cutting your hand\nThe edges are sharp\nOn the borderland\n\nI lay there thirsty for water\nI begin to forget\nI'm a sister and daughter\n\nEach day you return to the vase\nThe broken shards continue\nTheir broken hostile ways\n\nThe flowers remain as they lay\nThirsty and headed\nFor certain decay\n\nYou leave it alone for a while\nYou draw a line\nAround the pile\n\nThe line makes it all the more clear\nWarning! Danger!\nDo not go near.\n\n"Its too dangerous" they all start to say,\nThe glass cuts\nSo the flowers must stay\n\nIt's okay that you didn't save the flowers\nThere's no value now\nThey've been there for hours\n\nSo you sweep it all up with a broom and pan\nFlowers and shards\nHand in hand.` },
+      { name: 'LITTLE HOUSE ON THE BORDERLINE', type: 'poem', date: '', content: `So here I am at the door\nOf my house of anger and sadness\nTrying to figure out the locks\nTo let out the impending madness\nThe neighbours whisper amongst themselves,\n"How badly kept a home"\nIt's not me! It's not me!\nI swear it is a ghost!\nI swear I am not like this, I swear I mow my lawn\nI swear I always take out the trash\nBut my anger lingers on.` },
+      { name: 'TOMORROW', type: 'poem', date: '', content: `"Tomorrow will be the first day of my life"\nI tell myself as I nestle into bed, trying again to find that\nRelief, like taking your heels off after a night out,\nI swear I have felt it before -\nAnd today I may have returned again to my familiar habits\nThe ones that pull my mind out of my body and let me just\nFloat\nBy\nTomorrow I will\nUse the meditation app\nDo the YouTube yoga\nComplete the checklist\n"Have peaceful, linear thoughts" I chuckle,\nAdd that in for good measure\nMaybe tomorrow I will finally choose myself over temporary pleasure\nI tend and cultivate this dissonance of reality with pride\nAs long as I want to heal, I will,\nRight?\nRight?\nRight?\nOkay. Tomorrow will be the first day of my life.` },
+      { name: "I'VE LOST THE KEY", type: 'poem', date: '', content: `Behind the lock\nThere's me.\nThe door is reinforced darkness,\nand I've lost the key.\n\nThe key is somewhere on the floor\nI search on my hands and knees.\nI squint through a fog of anger,\nI'm desperate for the key.\n\nI'm not the only one pounding\nAt the door that locks away me\nAll my lovers and friends\nAre looking for the key.\n\nAnd once we find that metallic access,\nTaste the me on my tongue;\nI hope you hold onto the truths\nThat my freedom defiantly sung.` },
+      { name: 'THE PLACE', type: 'poem', date: '07/23/2021', content: `Please show me the place\nwhere my pain is safe to stay\nI left it in my body, but it left me hollow and decayed\nI left it in my bedroom,\nwhere it has certainly overstayed\nI left some with my therapist, but only if she's paid\nI tried to show it to my friends but it's too much they say\nI left some of it with lovers, and they left some of theirs with me\nbut then that's just called trauma bonding\nand those trades aren't interest free\n\nRight now it lives in the space between living and the dead\nMy body's here, the TV's on, but nothing in my head\nI'll just sit like this for hours, the pain hovering above\nI'll distract myself with reality shows\nof shallow people looking for love\nIf I don't look directly at it, it's like it's not even there\nSo long as I live my life rather lifeless, dissociating in this chair.` },
+      { name: 'SOFTEN YOUR BELLY', type: 'poem', date: '11/30/2023', content: `I've been given permission\nTo soften my belly\nThere is space\nFor its undulations\nAs expansive as it requires\nAnd as it sighs\nIn lazy, unhurried rhythms\nIt signals to the rest of my wholeness\n"Spirit, you can speak up now,\nNerves, at ease,\nMind, wander where you need\nOr even, where you please.\nYour alienness is inalienable\nFor you've made yourself\nA loving home."` },
+      { name: 'WET FLOOR', type: 'poem', date: '', content: `Don't tell me that this is the best it can be\nI need that hope to keep me free\nI need my anger to spill out onto something\nI need my anger to spill out onto something\nHold me close hold me together\nI need an anchor I need a tether\nWatch your step\nThe floor is wet\nThe anger spills out of me` },
+      { name: '4 AM', type: 'poem', date: '', content: `4 am new years day\noutside, friends and lovers full of\nchampagne and hope\nshuffle gleefully towards their abodes\ninside, by sizeable contrast\nyou tell me you think it's over\nno, you know.\nI don't need\nmakeup wipes, I've got my tears to remove the champagne glitter from swollen lids\ninsanity intact I place my bids\ndon't leave me\ndon't leave me\ndon't leave me\nI let my hope weave around your heart like a fool` },
+    ] },
+    { name: 'ART SCHOOL', items: [
+      { name: 'CAT GESTURES', type: 'image', url: 'https://i.imgur.com/NBuVrgs.png' },
+      { name: 'CAT SHAPES', type: 'image', url: 'https://i.imgur.com/XvskZYO.png' },
+      { name: 'CAT SKELETAL STUDY', type: 'image', url: 'https://i.imgur.com/0kseYNm.png' },
+      { name: 'UNICORN', type: 'image', url: 'https://i.imgur.com/SS3vJCS.png' },
+      { name: 'SPACE BABE', type: 'image', url: 'https://i.imgur.com/vWVZvE7.png' },
+      { name: 'MAD SCIENTIST', type: 'image', url: 'https://i.imgur.com/UuslZxp.png' },
+      { name: 'CARICATURES', type: 'image', url: 'https://i.imgur.com/lHrww3f.png' },
+      { name: 'PEACH PASTELS', type: 'image', url: 'https://i.imgur.com/vixJ6ex.png' },
+      { name: 'NUDE STUDY', type: 'image', url: 'https://i.imgur.com/PFlZRjL.png' },
+    ] },
+  ]
+};
+
+let archivePath = [];
+
+function getArchiveFolder(path) {
+  let current = ARCHIVE_DATA;
+  for (const idx of path) {
+    const items = current.folders || current.items;
+    current = items[idx];
+  }
+  return current;
+}
+
+function renderArchive() {
+  const body = document.getElementById('archive-body');
+  const pathEl = document.getElementById('archive-path');
+  const status = document.getElementById('archive-status');
+  if (!body) return;
+  body.innerHTML = '';
+
+  if (archivePath.length === 0) {
+    // Show root folders
+    pathEl.innerHTML = '<span style="filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5);display:inline-block;">📂</span> ARCHIVE';
+    const folders = ARCHIVE_DATA.folders;
+    status.textContent = folders.length + ' FOLDER' + (folders.length !== 1 ? 'S' : '');
+    folders.forEach((folder, idx) => {
+      const el = document.createElement('div');
+      el.style.cssText = 'width:90px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:none;border:1px solid transparent;';
+      el.onmouseenter = () => { el.style.background = 'rgba(255,51,161,0.1)'; el.style.borderColor = 'rgba(255,51,161,0.3)'; };
+      el.onmouseleave = () => { el.style.background = 'transparent'; el.style.borderColor = 'transparent'; };
+      el.onclick = () => { archivePath = [idx]; renderArchive(); };
+      el.innerHTML = '<span style="font-size:32px;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 5px rgba(255,51,161,0.5));">📁</span><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink);letter-spacing:0.5px;text-align:center;line-height:1.2;">' + folder.name + '</span>';
+      body.appendChild(el);
+    });
+  } else {
+    // Show folder contents
+    const folder = getArchiveFolder(archivePath);
+    // Build breadcrumb
+    let breadcrumb = '<span onclick="archivePath=[];renderArchive();" style="cursor:none;text-decoration:underline;"><span style="filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5);display:inline-block;">📂</span> ARCHIVE</span>';
+    for (let i = 0; i < archivePath.length; i++) {
+      const crumbFolder = getArchiveFolder(archivePath.slice(0, i + 1));
+      if (i < archivePath.length - 1) {
+        const pathCopy = archivePath.slice(0, i + 1);
+        breadcrumb += ' / <span onclick="archivePath=[' + pathCopy.join(',') + '];renderArchive();" style="cursor:none;text-decoration:underline;">' + crumbFolder.name + '</span>';
+      } else {
+        breadcrumb += ' / ' + crumbFolder.name;
+      }
+    }
+    pathEl.innerHTML = breadcrumb;
+    const items = folder.items || [];
+    if (items.length === 0) {
+      body.innerHTML = '<div style="font-family:var(--font);font-size:13px;color:var(--pink-dim);letter-spacing:1.5px;padding:20px;text-align:center;width:100%;">COMING SOON — STAY TUNED :)</div>';
+      status.textContent = '0 ITEMS';
+    } else {
+      const fileItems = items.filter(i => i.type !== 'folder');
+      const folderItems = items.filter(i => i.type === 'folder');
+      status.textContent = (folderItems.length ? folderItems.length + ' FOLDER' + (folderItems.length !== 1 ? 'S' : '') + ', ' : '') + fileItems.length + ' ITEM' + (fileItems.length !== 1 ? 'S' : '');
+      items.forEach((item, idx) => {
+        const el = document.createElement('div');
+        el.style.cssText = 'width:90px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:none;border:1px solid transparent;';
+        el.onmouseenter = () => { el.style.background = 'rgba(255,51,161,0.1)'; el.style.borderColor = 'rgba(255,51,161,0.3)'; };
+        el.onmouseleave = () => { el.style.background = 'transparent'; el.style.borderColor = 'transparent'; };
+        if (item.type === 'folder') {
+          el.onclick = () => { archivePath = [...archivePath, idx]; renderArchive(); };
+          el.innerHTML = '<span style="font-size:32px;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 5px rgba(255,51,161,0.5));">📁</span><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink);letter-spacing:0.5px;text-align:center;line-height:1.2;">' + item.name + '</span>';
+        } else {
+          const icon = item.type === 'poem' ? '📄' : item.type === 'link' ? '🔗' : '🖼';
+          el.onclick = () => {
+            if (item.type === 'poem') { openNotepad(item); }
+            else if (item.type === 'link') { window.open(item.url, '_blank'); }
+            else if (item.url) { openProject(item.name, item.url); }
+          };
+          el.innerHTML = '<span style="font-size:32px;filter:grayscale(1) brightness(0.6) sepia(1) hue-rotate(290deg) saturate(5) drop-shadow(0 0 5px rgba(255,51,161,0.5));">' + icon + '</span><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink);letter-spacing:0.5px;text-align:center;line-height:1.2;">' + item.name + '</span>';
+        }
+        body.appendChild(el);
+      });
+    }
+  }
+}
+
+function openNotepad(item) {
+  document.getElementById('notepad-title').textContent = item.name + '.TXT';
+  document.getElementById('notepad-date').textContent = item.date || '';
+  document.getElementById('notepad-body').textContent = item.content;
+  const win = document.getElementById('notepad-window');
+  win.classList.remove('hidden');
+  raiseWindow(win);
+}
+
+// Render archive when opened
+(function() {
+  const orig = openWindow;
+  openWindow = function(id) {
+    orig(id);
+    if (id === 'archive-window') { archivePath = []; renderArchive(); }
+  };
+})();
+
+// ── Cat meow ──
+const meowSound = new Audio('https://res.cloudinary.com/djol50py3/video/upload/v1773203470/meowwww_msxyxs.mp3');
+let _meowLock = false;
+function closeCatPopup(e) {
+  if(e){e.stopPropagation();e.preventDefault();}
+  _meowLock = true;
+  setTimeout(() => { _meowLock = false; }, 1000);
+  document.getElementById('cat-popup-window').style.display='none';
+}
+function playMeow(e) {
+  if(e){e.stopPropagation();e.preventDefault();}
+  if (_meowLock) return;
+  _meowLock = true;
+  setTimeout(() => { _meowLock = false; }, 1000);
+  meowSound.currentTime = 0; meowSound.play();
+  const p = document.getElementById('cat-popup-window');
+  if (p.style.display !== 'none') return;
+  p.style.display = '';
+}
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// Project filtering
+function filterProjects(cat, el) {
+  document.querySelectorAll('#folder-window .win-menu-item').forEach(i => i.classList.remove('active-filter'));
+  el.classList.add('active-filter');
+  const items = document.querySelectorAll('.proj-item');
+  let count = 0;
+  items.forEach(item => {
+    const cats = item.dataset.cat.split(' ');
+    const show = cat === 'all' || cats.includes(cat);
+    item.classList.toggle('hidden-proj', !show);
+    if (show) count++;
+  });
+  document.getElementById('proj-count').textContent = count + ' PROJECT' + (count !== 1 ? 'S' : '');
+}
+
+// Window management
+let z = 10000;
+const openWindows = new Set();
+
+function openWindow(id) {
+  const win = document.getElementById(id);
+  if (!win) return;
+  win.classList.remove('hidden');
+  raiseWindow(win);
+  openWindows.add(id);
+  updateTaskbar();
+  closeStartMenu();
+}
+
+function closeWindow(id) {
+  if (id === 'player-window' && scWidget && scPlaying) { scWidget.pause(); }
+  if (id === 'proj-viewer-window') {
+    const iframe = document.getElementById('proj-viewer-iframe');
+    if (iframe) { const src = iframe.src; iframe.src = ''; iframe.src = src; }
+  }
+  const el = document.getElementById(id);
+  if (el) el.classList.add('hidden');
+  openWindows.delete(id);
+  updateTaskbar();
+}
+
+// Returns coordinates that work for both mouse and touch events
+function getCoords(e) {
+  return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
+                   : { x: e.clientX, y: e.clientY };
+}
+
+function startResize(e, id, dir) {
+  e.stopPropagation();
+  e.preventDefault();
+  const win = document.getElementById(id);
+  const { x: startX, y: startY } = getCoords(e);
+  const startW = win.offsetWidth, startH = win.offsetHeight;
+  function onMove(e) {
+    const { x, y } = getCoords(e);
+    if (dir === 'se' || dir === 'e') win.style.width  = Math.max(260, startW + x - startX) + 'px';
+    if (dir === 'se' || dir === 's') win.style.height = Math.max(120, startH + y - startY) + 'px';
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend', onUp);
+}
+
+function toggleCollapse(id) {
+  const win = document.getElementById(id);
+  if (!win) return;
+  win.classList.add('hidden');
+  updateTaskbar();
+}
+
+const projMenuIds = ['ml-menu-window','ls-menu-window','nb-menu-window','mt-menu-window','tv-menu-window','ly-menu-window','dyp-menu-window','ljd-menu-window','bbt-menu-window','cc-menu-window','bs-menu-window','lavande-menu-window','reverb-menu-window','coven-menu-window'];
+
+const tabLabels = {
+  'folder-window':      '꩜ PORTFOLIO',
+  'about-window':       '✦ ABOUT',
+  'contact-window':     '✉ CONTACT',
+  'player-window':      '♪ PLAYER',
+  'proj-viewer-window': '▤ PROJECT',
+  'paint-window':       '✏ PAINT',
+  'solitaire-window':   '♠ SOLITAIRE',
+  'who-window':         'WHO IS SONJA?',
+  'team-window':        'TEAM',
+  'archive-window':     '⊟ ARCHIVE'
+};
+
+function updateTaskbar() {
+  const tabs = document.getElementById('taskbar-tabs');
+  tabs.innerHTML = '';
+  openWindows.forEach(id => {
+    if (projMenuIds.includes(id)) return; // never show proj menus in taskbar
+    const tab = document.createElement('div');
+    tab.className = 'taskbar-tab active';
+    tab.innerHTML = `${tabLabels[id] || id}<span class="tab-close" onclick="event.stopPropagation();closeWindow('${id}')">✕</span>`;
+    tab.onclick = () => { const w = document.getElementById(id); if (w) { w.classList.remove('hidden'); raiseWindow(w); } };
+    tabs.appendChild(tab);
+  });
+}
+
+function startDrag(e, id) {
+  if (e.target.closest('.tb-btn')) return; // let button clicks through
+  const win = document.getElementById(id);
+  if (!win) return;
+  raiseWindow(win);
+  const desktop = document.querySelector('.desktop');
+  const dRect = desktop.getBoundingClientRect();
+  const rect = win.getBoundingClientRect();
+  // Resolve to desktop-relative position and clear any right/transform offsets
+  win.style.left = (rect.left - dRect.left) + 'px';
+  win.style.top  = (rect.top  - dRect.top)  + 'px';
+  win.style.bottom = 'auto';
+  win.style.right = 'auto';
+  win.style.transform = 'none';
+  const { x: startX, y: startY } = getCoords(e);
+  const sx = startX - rect.left;
+  const sy = startY - rect.top;
+  let dragging = false;
+  win.style.willChange = 'left, top';
+  function onMove(e) {
+    const { x, y } = getCoords(e);
+    // Only start real drag after moving 4px — prevents killing clicks
+    if (!dragging) {
+      const dx = x - startX, dy = y - startY;
+      if (Math.sqrt(dx*dx + dy*dy) < 4) return;
+      dragging = true;
+      setCursorMove();
+    }
+    e.preventDefault();
+    win.style.left = (x - dRect.left - sx) + 'px';
+    win.style.top  = (y - dRect.top  - sy) + 'px';
+  }
+  function onUp() {
+    win.style.willChange = '';
+    if (dragging) setCursorDefault();
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend', onUp);
+}
+
+function sendContact() {
+  const name    = document.getElementById('contact-name').value.trim();
+  const email   = document.getElementById('contact-email').value.trim();
+  const message = document.getElementById('contact-message').value.trim();
+  const subject = encodeURIComponent('Dreamweave Studio — Message from ' + (name || 'visitor'));
+  const body    = encodeURIComponent((email ? 'From: ' + email + '\n\n' : '') + (message || ''));
+  window.location.href = 'mailto:sonja.schouten4@gmail.com?subject=' + subject + '&body=' + body;
+}
+
+ function openProjMenu(menuId, e) {
+  // Clear all menus and active states
+  document.querySelectorAll('.proj-item.active').forEach(el => el.classList.remove('active'));
+  projMenuIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+  // Mark the clicked proj-item as active
+  const clickedItem = e.target.closest('.proj-item');
+  if (clickedItem) clickedItem.classList.add('active');
+  const desktop = document.querySelector('.desktop');
+  if (!desktop) return;
+  const dRect = desktop.getBoundingClientRect();
+  let top = e.clientY - dRect.top - 10;
+  let left = e.clientX - dRect.left + 16;
+  if (left + 270 > dRect.width) left = e.clientX - dRect.left - 278;
+  menu.style.top = top + 'px';
+  menu.style.left = left + 'px';
+  menu.classList.remove('hidden');
+  raiseWindow(menu);
+}
+
+function closeProjMenu(menuId) {
+  const el = document.getElementById(menuId);
+  if (el) el.classList.add('hidden');
+  document.querySelectorAll('.proj-item.active').forEach(el => el.classList.remove('active'));
+}
+
+const TEAM_DATA = {
+  'LAUNDRY SLAY': [
+    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'PHOTOGRAPHER · VIDEOGRAPHER · EDITOR', name: 'KITTY ZHANG', handle: 'KITTY WITH PHOTOGRAPHY' },
+    { role: 'PRODUCER', name: 'CAITLIN ACKEN TAYLOR', handle: 'OAK AND BONE PRODUCTIONS' },
+    { role: 'MODEL', name: 'ALISON ALEXANDER', handle: '@THEALISONALEXANDER' },
+  ],
+  'MARSHMALLOW LOVER': [
+    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'VIDEOGRAPHER · EDITOR', name: 'DEANNA MILLIGAN', handle: 'SUBLUNAR FILMS' },
+    { role: 'SONG', name: 'MARSHMALLOW LOVER', handle: 'WRITTEN AND PERFORMED BY CAITLIN ACKEN TAYLOR' },
+    { role: 'TALENT', name: 'CAITLIN ACKEN TAYLOR', handle: '@OAKANDBONE' },
+  ],
+  'NICK + BECCA': [
+    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'PRODUCER', name: 'CAITLIN ACKEN TAYLOR', handle: 'OAK AND BONE PRODUCTIONS' },
+    { role: 'PHOTOGRAPHER', name: 'DANIEL TAGGART-HODGE', handle: '@DTH.35MM' },
+    { role: 'MODELS', name: 'NICK MARSON + BECCA MITCHELL', handle: '' },
+  ],
+  'MULTITASKERS': [
+    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'PRODUCER', name: 'CAITLIN ACKEN TAYLOR', handle: 'OAK AND BONE PRODUCTIONS' },
+    { role: 'PHOTOGRAPHER · EDITOR', name: 'DANIELLE ACKEN', handle: '@DLACKENPHOTOS' },
+    { role: 'SET BUILD', name: 'DANIEL TAGGART-HODGE', handle: '@DTH.35MM' },
+    { role: 'MODELS', members: [
+      { name: 'ALISON ALEXANDER', handle: '@THEALISONALEXANDER' },
+      { name: 'HEATHER DUMONT', handle: '@HELLO.ITS.LAVANDE' },
+      { name: 'JESS CLAIRMONT', handle: '@COUNTVONCVNT' },
+      { name: 'ROXANA FERARU', handle: '@ROXANAFERARU' },
+      { name: 'SONJA SCHOUTEN', handle: '@CUTEANDLANKY' },
+      { name: 'CAITLIN ACKEN TAYLOR', handle: '@OAKANDBONE' },
+    ]},
+  ],
+  'DO YOU PLEASER?': [
+    { role: 'CREATIVE DIRECTOR · EDITOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'VIDEOGRAPHER · COLOUR', name: 'SANDY ROSSIGNOL', handle: 'ADS FOR TARGETING' },
+    { role: 'DANCERS', members: [
+      { name: 'SONJA SCHOUTEN', handle: '@CHROMEFAERIE' },
+      { name: 'IVY DIVINE', handle: '@IVY.CLIMBS.CHROME' },
+      { name: 'ALIXX LUST', handle: '@ALIXXLUST' },
+    ]},
+  ],
+  'BUBBLE SKINCARE': [
+    { role: 'MOTION GRAPHIC DESIGNER', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'CONTRACTED BY', name: 'SANDY ROSSIGNOL', handle: 'ADS FOR TARGETING' },
+  ],
+};
+
+function openTeamWindow(project) {
+  projMenuIds.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+  document.querySelectorAll('.proj-item.active').forEach(el => el.classList.remove('active'));
+  const data = TEAM_DATA[project];
+  const title = document.getElementById('team-window-title');
+  const body = document.getElementById('team-window-body');
+  if (title) title.textContent = project + ' — TEAM';
+  tabLabels['team-window'] = project + ' — TEAM';
+  if (body) {
+    body.innerHTML = '';
+    if (data && data.length) {
+      data.forEach(m => {
+        const row = document.createElement('div');
+        row.style.cssText = 'border-bottom:1px solid var(--pink-border);padding-bottom:7px;margin-bottom:1px;';
+        if (m.members) {
+          let html = `<div style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:2px;margin-bottom:4px;">${m.role}</div>`;
+          m.members.forEach(p => {
+            html += `<div style="font-family:var(--font);font-size:14px;color:var(--pink);letter-spacing:1px;line-height:1.3;">${p.name}</div><div style="font-family:var(--font);font-size:11px;color:rgba(255,51,161,0.45);letter-spacing:1px;margin-bottom:3px;">${p.handle}</div>`;
+          });
+          row.innerHTML = html;
+        } else {
+          row.innerHTML = `<div style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:2px;">${m.role}</div><div style="font-family:var(--font);font-size:14px;color:var(--pink);letter-spacing:1px;margin-top:2px;">${m.name}</div><div style="font-family:var(--font);font-size:11px;color:rgba(255,51,161,0.45);letter-spacing:1px;">${m.handle}</div>`;
+        }
+        body.appendChild(row);
+      });
+    } else {
+      body.innerHTML = '<div style="font-family:var(--font);font-size:12px;color:var(--pink-dim);letter-spacing:2px;">COMING SOON</div>';
+    }
+  }
+  openWindow('team-window');
+}
+
+function openProjectFromMenu(title, url) {
+  projMenuIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+  document.querySelectorAll('.proj-item.active').forEach(el => el.classList.remove('active'));
+  if (!url) {
+    showComingSoon(event);
+    return;
+  }
+  openProject(title, url);
+}
+
+function showComingSoon(e) {
+  let popup = document.getElementById('coming-soon-popup');
+  if (popup) popup.remove();
+  popup = document.createElement('div');
+  popup.id = 'coming-soon-popup';
+  popup.textContent = 'coming soon! stay tuned :)';
+  popup.style.cssText = 'position:fixed;z-index:999999;background:var(--window-bg);border:2px solid var(--pink);color:var(--pink);font-family:var(--font);font-size:14px;letter-spacing:1.5px;padding:10px 18px;pointer-events:none;opacity:0;transition:opacity 0.3s ease;text-shadow:0 0 8px var(--pink);';
+  document.body.appendChild(popup);
+  const x = e ? e.clientX : window.innerWidth / 2;
+  const y = e ? e.clientY : window.innerHeight / 2;
+  popup.style.left = (x - popup.offsetWidth / 2) + 'px';
+  popup.style.top = (y - 40) + 'px';
+  requestAnimationFrame(() => { popup.style.opacity = '1'; });
+  setTimeout(() => { popup.style.opacity = '0'; setTimeout(() => popup.remove(), 300); }, 1800);
+}
+
+function openProject(title, url) {
+  document.getElementById('proj-viewer-title').textContent = title;
+  tabLabels['proj-viewer-window'] = title;
+  const win = document.getElementById('proj-viewer-window');
+  const iframe = document.getElementById('proj-viewer-iframe');
+  const gallery = document.getElementById('proj-viewer-gallery');
+  if (gallery) gallery.style.display = 'none';
+  const isImage = /\.(gif|jpg|jpeg|png|webp)(\?.*)?$/i.test(url);
+  const isPortrait = url.includes('vimeo') && url.includes('1172293718');
+  const isLunaYen = url.includes('WVbk56X');
+  const isSquare = url.includes('QBfaKai') || url.includes('LRq3whC') || url.includes('DAGJLjKwrGI') || url.includes('DAGIzYAaocM') || url.includes('xyNifVo') || url.includes('gPl6GfV') || url.includes('EahOC3x') || url.includes('GnteJpo') || url.includes('LiaG0Oh') || url.includes('0k7yQmY') || url.includes('VVmbbJq') || url.includes('pnEqLrV') || url.includes('4ND4dcw');
+  if (win) {
+    if (isPortrait) {
+      win.style.width = '360px';
+      win.style.height = '660px';
+      win.style.left = 'calc(50% - 180px)';
+    } else if (isLunaYen) {
+      win.style.width = '400px';
+      win.style.height = '520px';
+      win.style.left = 'calc(50% - 200px)';
+    } else if (isSquare) {
+      win.style.width = '480px';
+      win.style.height = '514px';
+      win.style.left = 'calc(50% - 240px)';
+    } else {
+      win.style.width = '640px';
+      win.style.height = '480px';
+      win.style.left = 'calc(50% - 40%)';
+    }
+  }
+  if (isImage) {
+    iframe.style.display = 'none';
+    let img = document.getElementById('proj-viewer-img');
+    if (!img) {
+      img = document.createElement('img');
+      img.id = 'proj-viewer-img';
+      img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;background:#100805;';
+      iframe.parentNode.insertBefore(img, iframe);
+    }
+    img.src = url;
+    img.style.display = 'block';
+    img.style.background = '#100805';
+  } else {
+    iframe.src = url;
+    iframe.style.display = 'block';
+    const img = document.getElementById('proj-viewer-img');
+    if (img) img.style.display = 'none';
+  }
+  openWindow('proj-viewer-window');
+}
+
+function openCovenGallery() {
+  projMenuIds.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+  document.querySelectorAll('.proj-item.active').forEach(el => el.classList.remove('active'));
+  document.getElementById('proj-viewer-title').textContent = 'COVEN COLLECTIVE — ANIMATIONS';
+  tabLabels['proj-viewer-window'] = 'COVEN COLLECTIVE — ANIMATIONS';
+  const win = document.getElementById('proj-viewer-window');
+  const iframe = document.getElementById('proj-viewer-iframe');
+  iframe.style.display = 'none';
+  let img = document.getElementById('proj-viewer-img');
+  if (img) img.style.display = 'none';
+  // Set 4:5 window
+  win.style.width = '400px';
+  win.style.height = '524px';
+  win.style.left = 'calc(50% - 200px)';
+  // Build scrollable gallery
+  let gallery = document.getElementById('proj-viewer-gallery');
+  if (!gallery) {
+    gallery = document.createElement('div');
+    gallery.id = 'proj-viewer-gallery';
+    gallery.style.cssText = 'width:100%;height:100%;overflow-y:auto;overflow-x:hidden;background:#100805;scrollbar-width:thin;scrollbar-color:var(--pink-border) transparent;';
+    iframe.parentNode.insertBefore(gallery, iframe);
+  }
+  gallery.innerHTML = '';
+  gallery.style.display = 'block';
+  ['https://i.imgur.com/qEpc8y0.gif','https://i.imgur.com/2GPTJYq.gif','https://i.imgur.com/1y86xoh.gif','https://i.imgur.com/JTGgtky.gif'].forEach(src => {
+    const im = document.createElement('img');
+    im.src = src;
+    im.style.cssText = 'width:100%;display:block;';
+    gallery.appendChild(im);
+  });
+  openWindow('proj-viewer-window');
+}
+
+function toggleStartMenu() { const el = document.getElementById('start-menu'); if (el) el.classList.toggle('open'); }
+function closeStartMenu() { const el = document.getElementById('start-menu'); if (el) el.classList.remove('open'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('.start-btn') && !e.target.closest('.start-menu')) closeStartMenu();
+});
+
+// ── PAINT.EXE ──
+const paintPalette = [
+  '#ff33a1','#ff80cc','#ffb3e0','#ff0066','#cc0055',
+  '#ffffff','#cccccc','#888888','#444444','#100805',
+  '#ff6633','#ff9900','#ffcc00','#ccff00','#00ff99',
+  '#00ccff','#0066ff','#6600ff','#cc33ff','#ff33cc',
+  '#8B0000','#006633','#003366','#330066','#4a1a00',
+];
+
+let paintTool = 'pencil';
+let paintSize = 1;
+let paintColour = '#ff33a1';
+let paintDrawing = false;
+let paintLastX = null, paintLastY = null;
+let paintSnapshot = null; // for line/rect preview
+
+function initPaint() {
+  // Build palette
+  const pal = document.getElementById('paint-palette');
+  pal.innerHTML = '';
+  paintPalette.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'paint-swatch';
+    sw.style.background = c;
+    sw.onclick = () => { paintColour = c; updatePaintUI(); };
+    pal.appendChild(sw);
+  });
+
+  // Size canvas to its container
+  resizePaintCanvas();
+}
+
+function resizePaintCanvas() {
+  const win = document.getElementById('paint-window');
+  const canvas = document.getElementById('paint-canvas');
+  const container = canvas.parentElement;
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  if (w < 10 || h < 10) return;
+  // Save existing drawing
+  const tmp = document.createElement('canvas');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  tmp.getContext('2d').drawImage(canvas, 0, 0);
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#100805';
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(tmp, 0, 0);
+}
+
+function setPaintTool(tool) {
+  paintTool = tool;
+  document.querySelectorAll('.pt-tool').forEach(t => t.classList.remove('active-tool'));
+  const el = document.getElementById('tool-' + tool);
+  if (el) el.classList.add('active-tool');
+  const label = document.getElementById('paint-tool-label');
+  if (label) label.textContent = tool.toUpperCase();
+}
+
+function setPaintSize(s) {
+  paintSize = s;
+  document.querySelectorAll('.pt-size').forEach(el => el.classList.remove('active-size'));
+  const el = document.getElementById('size-' + s);
+  if (el) el.classList.add('active-size');
+}
+
+function updatePaintUI() {
+  document.getElementById('paint-active-colour').style.background = paintColour;
+  document.getElementById('paint-colour-hex').textContent = paintColour.toUpperCase();
+}
+
+function paintGetPos(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  const src = e.touches ? e.touches[0] : e;
+  return { x: Math.floor(src.clientX - r.left), y: Math.floor(src.clientY - r.top) };
+}
+
+function paintFill(ctx, x, y, fillColour, w, h) {
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+  const idx = (y * w + x) * 4;
+  const tr = data[idx], tg = data[idx+1], tb = data[idx+2], ta = data[idx+3];
+  const fc = hexToRgb(fillColour);
+  if (tr === fc.r && tg === fc.g && tb === fc.b) return;
+  const stack = [[x, y]];
+  while (stack.length) {
+    const [cx, cy] = stack.pop();
+    if (cx < 0 || cx >= w || cy < 0 || cy >= h) continue;
+    const i = (cy * w + cx) * 4;
+    if (data[i] !== tr || data[i+1] !== tg || data[i+2] !== tb || data[i+3] !== ta) continue;
+    data[i] = fc.r; data[i+1] = fc.g; data[i+2] = fc.b; data[i+3] = 255;
+    stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+
+function rgbToHex(r,g,b) {
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+
+function paintDraw(e) {
+  e.preventDefault();
+  const canvas = document.getElementById('paint-canvas');
+  const ctx = canvas.getContext('2d');
+  const {x, y} = paintGetPos(e, canvas);
+
+  if (paintTool === 'pencil' || paintTool === 'eraser') {
+    ctx.globalCompositeOperation = paintTool === 'eraser' ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = paintColour;
+    ctx.lineWidth = paintSize;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    if (paintLastX !== null) {
+      ctx.moveTo(paintLastX, paintLastY);
+      ctx.lineTo(x, y);
+    } else {
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+    paintLastX = x; paintLastY = y;
+
+  } else if (paintTool === 'glow') {
+    ctx.globalCompositeOperation = 'source-over';
+    // Step along the line from last point to current for continuous stroke
+    const lx = paintLastX !== null ? paintLastX : x;
+    const ly = paintLastY !== null ? paintLastY : y;
+    const dist = Math.sqrt((x - lx) ** 2 + (y - ly) ** 2);
+    const steps = Math.max(1, Math.ceil(dist / 3));
+    for (let s = 0; s <= steps; s++) {
+      const px = lx + (x - lx) * (s / steps);
+      const py = ly + (y - ly) * (s / steps);
+      const r = paintSize * 6;
+      const grad = ctx.createRadialGradient(px, py, 0, px, py, r * 2);
+      grad.addColorStop(0, paintColour + 'cc');
+      grad.addColorStop(0.2, paintColour + '66');
+      grad.addColorStop(0.6, paintColour + '22');
+      grad.addColorStop(1, paintColour + '00');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py, r * 2, 0, Math.PI * 2);
+      ctx.fill();
+      // Bright centre
+      ctx.fillStyle = '#ffffff44';
+      ctx.beginPath();
+      ctx.arc(px, py, Math.max(1, paintSize * 0.5), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    paintLastX = x; paintLastY = y;
+
+  } else if (paintTool === 'spray') {
+    ctx.globalCompositeOperation = 'source-over';
+    const density = 40;
+    const radius = paintSize * 8;
+    for (let i = 0; i < density; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * radius;
+      const sx = x + Math.cos(angle) * dist;
+      const sy = y + Math.sin(angle) * dist;
+      ctx.fillStyle = paintColour;
+      ctx.globalAlpha = Math.random() * 0.6 + 0.1;
+      ctx.beginPath();
+      ctx.arc(sx, sy, Math.random() * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    paintLastX = x; paintLastY = y;
+
+  } else if (paintTool === 'line' || paintTool === 'rect') {
+    if (paintSnapshot) ctx.putImageData(paintSnapshot, 0, 0);
+    ctx.strokeStyle = paintColour;
+    ctx.lineWidth = paintSize;
+    ctx.lineCap = 'round';
+    if (paintTool === 'line') {
+      ctx.beginPath();
+      ctx.moveTo(paintLastX, paintLastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(paintLastX, paintLastY, x - paintLastX, y - paintLastY);
+    }
+  }
+}
+
+function paintStart(e) {
+  e.preventDefault();
+  const canvas = document.getElementById('paint-canvas');
+  const ctx = canvas.getContext('2d');
+  const {x, y} = paintGetPos(e, canvas);
+
+  if (paintTool === 'fill') {
+    paintFill(ctx, x, y, paintColour, canvas.width, canvas.height);
+    return;
+  }
+  if (paintTool === 'eyedropper') {
+    const px = ctx.getImageData(x, y, 1, 1).data;
+    paintColour = rgbToHex(px[0], px[1], px[2]);
+    updatePaintUI();
+    setPaintTool('pencil');
+    return;
+  }
+
+  paintDrawing = true;
+  paintLastX = x; paintLastY = y;
+  if (paintTool === 'line' || paintTool === 'rect') {
+    paintSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  }
+  paintDraw(e);
+}
+
+function paintEnd() {
+  paintDrawing = false;
+  paintLastX = null; paintLastY = null;
+  paintSnapshot = null;
+}
+
+function paintClear() {
+  const canvas = document.getElementById('paint-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#100805';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function paintSave() {
+  const canvas = document.getElementById('paint-canvas');
+  const a = document.createElement('a');
+  a.download = 'dreamweave-paint.png';
+  a.href = canvas.toDataURL();
+  a.click();
+}
+
+// Wire up paint canvas events
+function initPaintEvents() {
+  const canvas = document.getElementById('paint-canvas');
+  if (!canvas) return;
+  canvas.addEventListener('mousedown', paintStart);
+  document.addEventListener('mousemove', e => { if (paintDrawing) paintDraw(e); });
+  document.addEventListener('mouseup', paintEnd);
+  canvas.addEventListener('touchstart', paintStart, {passive:false});
+  document.addEventListener('touchmove', e => { if (paintDrawing) paintDraw(e); }, {passive:false});
+  document.addEventListener('touchend', paintEnd);
+}
+
+function initPaintPalette() {
+  const pal = document.getElementById('paint-palette');
+  if (!pal) return;
+  pal.innerHTML = '';
+  paintPalette.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'paint-swatch';
+    sw.style.background = c;
+    sw.onclick = () => { paintColour = c; updatePaintUI(); };
+    pal.appendChild(sw);
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { initPaintPalette(); initPaintEvents(); });
+} else {
+  initPaintPalette(); initPaintEvents();
+}
+
+// Resize paint canvas when paint window is opened
+const paintResizeObserver = new ResizeObserver(() => {
+  const win = document.getElementById('paint-window');
+  if (win && !win.classList.contains('hidden')) resizePaintCanvas();
+});
+
+const _origOpenWindow = openWindow;
+openWindow = function(id) {
+  _origOpenWindow(id);
+  if (id === 'paint-window') {
+    setTimeout(resizePaintCanvas, 50);
+    paintResizeObserver.observe(document.getElementById('paint-window'));
+  }
+  if (id === 'solitaire-window' && SOL.tableau[0].length === 0) solNewGame();
+};
+
+setTimeout(() => { openWindow('folder-window'); openWindow('player-window'); }, 300);
+
+function raiseWindow(win) {
+  if (win.id === 'cat-popup-window') return;
+  z++;
+  win.style.transform = 'none';
+  win.style.zIndex = z;
+}
+
+// Raise window on pointerdown (capture phase, fires before mousedown)
+document.addEventListener('pointerdown', e => {
+  const win = e.target.closest('.window');
+  if (win && win.style.display !== 'none' && !win.classList.contains('hidden')) raiseWindow(win);
+}, true);
+
+</script>
+
+<!-- duotone filter: shadows=#100805, highlights=#291d14 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="duotone-brown">
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncR type="table" tableValues="0.063 0.161"/>
+        <feFuncG type="table" tableValues="0.031 0.114"/>
+        <feFuncB type="table" tableValues="0.020 0.078"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
+<div id="cat-popup-window" class="window" role="alertdialog" aria-label="You have received a cat" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:240px;z-index:99000;" onclick="event.stopPropagation()">
+  <div class="titlebar"><div class="titlebar-btns"><div class="tb-btn" onclick="closeCatPopup(event)">✕</div></div><div class="titlebar-text">MEOW!</div></div>
+  <div class="win-body" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px;">
+    <img src="https://i.imgur.com/mdIE4Qd.gif" style="width:120px;height:120px;image-rendering:pixelated;">
+    <div style="font-family:var(--font);font-size:14px;color:var(--pink);text-shadow:0 0 8px var(--pink);letter-spacing:2px;text-align:center;">YOU HAVE RECEIVED A CAT.</div>
+    <div class="dialog-btn" onclick="closeCatPopup(event)" style="width:80px;text-align:center;">OK</div>
+  </div>
+</div>
+</body>
+</html>
+<script>
+// ── SOLITAIRE ──────────────────────────────────────────────────────────────
+const SOL = {
+  SUITS: ['♠','♣','♥','♦'],
+  RANKS: ['A','2','3','4','5','6','7','8','9','10','J','Q','K'],
+  RED:   ['♥','♦'],
+  stock: [], waste: [], foundations: [[],[],[],[]], tableau: [[],[],[],[],[],[],[]],
+};
+
+function solIsRed(suit) { return SOL.RED.includes(suit); }
+
+function solNewDeck() {
+  const d = [];
+  for (const s of SOL.SUITS) for (const r of SOL.RANKS) d.push({ suit: s, rank: r, faceUp: false });
+  for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+  return d;
+}
+
+function solNewGame() {
+  const deck = solNewDeck();
+  SOL.stock = []; SOL.waste = []; SOL.foundations = [[],[],[],[]]; SOL.tableau = [[],[],[],[],[],[],[]];
+  let idx = 0;
+  for (let col = 0; col < 7; col++) {
+    for (let row = 0; row <= col; row++) {
+      const card = deck[idx++];
+      card.faceUp = (row === col);
+      SOL.tableau[col].push(card);
+    }
+  }
+  while (idx < deck.length) SOL.stock.push(deck[idx++]);
+  document.getElementById('sol-msg').textContent = '';
+  solRender();
+}
+
+function solRankIdx(r) { return SOL.RANKS.indexOf(r); }
+
+function solCanStack(card, onCard) {
+  if (!onCard) return card.rank === 'K';
+  if (!onCard.faceUp) return false;
+  return solIsRed(card.suit) !== solIsRed(onCard.suit) && solRankIdx(card.rank) === solRankIdx(onCard.rank) - 1;
+}
+
+function solCanFoundation(card, pile) {
+  if (pile.length === 0) return card.rank === 'A';
+  const top = pile[pile.length - 1];
+  return card.suit === top.suit && solRankIdx(card.rank) === solRankIdx(top.rank) + 1;
+}
+
+function solCheckWin() {
+  if (SOL.foundations.every(f => f.length === 13)) {
+    document.getElementById('sol-msg').textContent = '✦ YOU WIN! ✦';
+  }
+}
+
+function solDrawFromStock() {
+  if (SOL.stock.length === 0) {
+    SOL.stock = SOL.waste.slice().reverse().map(c => ({ ...c, faceUp: false }));
+    SOL.waste = [];
+  } else {
+    const card = SOL.stock.pop();
+    card.faceUp = true;
+    SOL.waste.push(card);
+  }
+  solRender();
+}
+
+function solMakeCardEl(card, x, y, z) {
+  const el = document.createElement('div');
+  el.className = 'sol-card' + (card.faceUp ? (solIsRed(card.suit) ? ' red' : ' black') : ' face-down');
+  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.zIndex = z;
+  if (card.faceUp) {
+    el.innerHTML = `<span class="sol-rank">${card.rank}</span><span class="sol-suit">${card.suit}</span><span class="sol-center">${card.suit}</span>`;
+  } else {
+    el.innerHTML = `
+      <span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;">
+        <span style="font-size:26px;line-height:1;color:rgba(255,51,161,0.75);text-shadow:0 0 8px rgba(255,51,161,0.9);">✦</span>
+        <span style="font-size:12px;line-height:1;color:rgba(255,51,161,0.75);text-shadow:0 0 6px rgba(255,51,161,0.9);position:absolute;top:-2px;right:-10px;">✦</span>
+      </span>`;
+  }
+  return el;
+}
+
+function solRender() {
+  const board = document.getElementById('sol-board');
+  if (!board) return;
+  board.innerHTML = '';
+  const CW = 68, CH = 96, GAP = 10, COL_W = CW + GAP;
+  const TABLEAU_TOP = CH + GAP * 2;
+  const FACE_DOWN_OFFSET = 16, FACE_UP_OFFSET = 24;
+
+  // Stock
+  const stockEl = document.createElement('div');
+  stockEl.className = 'sol-pile-empty clickable';
+  stockEl.style.left = '0px'; stockEl.style.top = '0px';
+  stockEl.textContent = '↺';
+  stockEl.style.color = SOL.stock.length === 0 ? 'rgba(255,51,161,0.2)' : 'rgba(255,51,161,0.5)';
+  stockEl.onclick = solDrawFromStock;
+  board.appendChild(stockEl);
+
+  if (SOL.stock.length > 0) {
+    const topStock = solMakeCardEl({ faceUp: false }, 0, 0, 1);
+    topStock.onclick = solDrawFromStock;
+    board.appendChild(topStock);
+  }
+
+  // Waste
+  const wasteEmpty = document.createElement('div');
+  wasteEmpty.className = 'sol-pile-empty';
+  wasteEmpty.style.left = COL_W + 'px'; wasteEmpty.style.top = '0px';
+  wasteEmpty.textContent = '⬡';
+  board.appendChild(wasteEmpty);
+
+  if (SOL.waste.length > 0 && !(SOL.dragging && SOL.dragging.source === 'waste')) {
+    const wCard = SOL.waste[SOL.waste.length - 1];
+    const wEl = solMakeCardEl(wCard, COL_W, 0, 10);
+    let wasteClickTimer = null;
+    wEl.addEventListener('mousedown', e => {
+      wasteClickTimer = setTimeout(() => solStartDrag(e, 'waste', SOL.waste.length - 1, -1), 180);
+    });
+    wEl.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      clearTimeout(wasteClickTimer);
+      solAutoMove('waste', -1, -1);
+    });
+    board.appendChild(wEl);
+  }
+
+  // Foundations
+  for (let f = 0; f < 4; f++) {
+    const fx = (f + 3) * COL_W;
+    const fEmpty = document.createElement('div');
+    fEmpty.className = 'sol-pile-empty';
+    fEmpty.style.left = fx + 'px'; fEmpty.style.top = '0px';
+    fEmpty.textContent = SOL.SUITS[f];
+    board.appendChild(fEmpty);
+    if (SOL.foundations[f].length > 0) {
+      const fc = SOL.foundations[f][SOL.foundations[f].length - 1];
+      board.appendChild(solMakeCardEl(fc, fx, 0, 10 + f));
+    }
+  }
+
+  // Tableau
+  for (let col = 0; col < 7; col++) {
+    const cx = col * COL_W;
+    const colEmpty = document.createElement('div');
+    colEmpty.className = 'sol-pile-empty';
+    colEmpty.style.left = cx + 'px'; colEmpty.style.top = TABLEAU_TOP + 'px';
+    colEmpty.textContent = 'K';
+    board.appendChild(colEmpty);
+
+    let y = TABLEAU_TOP;
+    SOL.tableau[col].forEach((card, idx) => {
+      const isDragged = SOL.dragging && SOL.dragging.source === 'tableau' && SOL.dragging.col === col && idx >= SOL.dragging.idx;
+      const el = solMakeCardEl(card, cx, y, 20 + col * 20 + idx);
+      if (!isDragged) {
+        if (card.faceUp) {
+          let clickTimer = null;
+          el.addEventListener('mousedown', e => {
+            clickTimer = setTimeout(() => solStartDrag(e, 'tableau', col, idx), 180);
+          });
+          el.addEventListener('dblclick', e => {
+            e.stopPropagation();
+            clearTimeout(clickTimer);
+            solAutoMove('tableau', col, idx);
+          });
+        } else if (idx === SOL.tableau[col].length - 1) {
+          el.addEventListener('click', () => { card.faceUp = true; solRender(); });
+        }
+        board.appendChild(el);
+      }
+      y += card.faceUp ? FACE_UP_OFFSET : FACE_DOWN_OFFSET;
+    });
+  }
+}
+
+function solStartDrag(e, source, col, idx) {
+  e.stopPropagation(); e.preventDefault();
+  const board = document.getElementById('sol-board');
+  const bRect = board.getBoundingClientRect();
+
+  let cards = [];
+  if (source === 'waste') {
+    cards = [SOL.waste[SOL.waste.length - 1]];
+  } else {
+    cards = SOL.tableau[col].slice(idx);
+  }
+  if (!cards.length) return;
+
+  // Mark cards as being dragged so render hides them
+  SOL.dragging = { source, col, idx };
+  solRender();
+
+  const ghosts = cards.map((card, i) => {
+    const g = solMakeCardEl(card, 0, 0, 0);
+    g.classList.add('dragging');
+    g.style.position = 'fixed';
+    g.style.zIndex = '999999';
+    g.style.pointerEvents = 'none';
+    g.style.left = (e.clientX - 34) + 'px';
+    g.style.top = (e.clientY - 10 + i * 24) + 'px';
+    document.body.appendChild(g);
+    return g;
+  });
+
+  function onMove(ev) {
+    ghosts.forEach((g, i) => { g.style.left = (ev.clientX - 34) + 'px'; g.style.top = (ev.clientY - 10 + i * 24) + 'px'; });
+  }
+  function onUp(ev) {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    ghosts.forEach(g => g.remove());
+    SOL.dragging = null;
+    solDrop(ev, cards, source, col, idx);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function solDrop(e, cards, source, srcCol, srcIdx) {
+  const board = document.getElementById('sol-board');
+  const bRect = board.getBoundingClientRect();
+  const mx = e.clientX - bRect.left, my = e.clientY - bRect.top;
+  const CW = 68, CH = 96, GAP = 10, COL_W = CW + GAP;
+  const TABLEAU_TOP = CH + GAP * 2;
+  const FACE_UP_OFFSET = 24, FACE_DOWN_OFFSET = 16;
+
+  // Try foundation
+  for (let f = 0; f < 4; f++) {
+    const fx = (f + 3) * COL_W;
+    if (cards.length === 1 && mx >= fx && mx <= fx + CW && my >= 0 && my <= CH) {
+      if (solCanFoundation(cards[0], SOL.foundations[f])) {
+        solRemoveFrom(source, srcCol, srcIdx);
+        SOL.foundations[f].push(cards[0]);
+        solCheckWin(); solRender(); return;
+      }
+    }
+  }
+
+  // Try tableau column
+  for (let col = 0; col < 7; col++) {
+    const cx = col * COL_W;
+    // Calculate bottom of this column's hit area
+    let colBottom = TABLEAU_TOP + CH;
+    SOL.tableau[col].forEach(c => { colBottom += c.faceUp ? FACE_UP_OFFSET : FACE_DOWN_OFFSET; });
+    if (mx >= cx && mx <= cx + CW && my >= TABLEAU_TOP && my <= colBottom) {
+      const topCard = SOL.tableau[col].length > 0 ? SOL.tableau[col][SOL.tableau[col].length - 1] : null;
+      if (solCanStack(cards[0], topCard)) {
+        solRemoveFrom(source, srcCol, srcIdx);
+        cards.forEach(c => SOL.tableau[col].push(c));
+        // Flip newly exposed card in source column
+        if (source === 'tableau') {
+          const src = SOL.tableau[srcCol];
+          if (src.length > 0 && !src[src.length - 1].faceUp) src[src.length - 1].faceUp = true;
+        }
+        solRender(); return;
+      }
+    }
+  }
+  solRender();
+}
+
+function solRemoveFrom(source, col, idx) {
+  if (source === 'waste') SOL.waste.pop();
+  else SOL.tableau[col].splice(idx);
+}
+
+function solAutoMove(source, col, idx) {
+  const card = source === 'waste'
+    ? SOL.waste[SOL.waste.length - 1]
+    : SOL.tableau[col][idx];
+  if (!card || !card.faceUp) return;
+
+  // Only auto-move single cards (top of stack)
+  if (source === 'tableau' && idx !== SOL.tableau[col].length - 1) return;
+
+  // Try foundation first
+  for (let f = 0; f < 4; f++) {
+    if (solCanFoundation(card, SOL.foundations[f])) {
+      solRemoveFrom(source, col, idx);
+      SOL.foundations[f].push(card);
+      // Flip newly exposed card
+      if (source === 'tableau') {
+        const src = SOL.tableau[col];
+        if (src.length > 0 && !src[src.length - 1].faceUp) src[src.length - 1].faceUp = true;
+      }
+      solCheckWin(); solRender(); return;
+    }
+  }
+
+  // Try tableau
+  for (let c = 0; c < 7; c++) {
+    if (source === 'tableau' && c === col) continue;
+    const topCard = SOL.tableau[c].length > 0 ? SOL.tableau[c][SOL.tableau[c].length - 1] : null;
+    if (solCanStack(card, topCard)) {
+      solRemoveFrom(source, col, idx);
+      SOL.tableau[c].push(card);
+      if (source === 'tableau') {
+        const src = SOL.tableau[col];
+        if (src.length > 0 && !src[src.length - 1].faceUp) src[src.length - 1].faceUp = true;
+      }
+      solRender(); return;
+    }
+  }
+}
+</script>
