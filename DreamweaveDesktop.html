@@ -321,12 +321,14 @@ html, body {
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: url(#duotone-brown) brightness(0.25);
+  filter: brightness(0.25);
   transition: filter 0.4s ease;
   z-index: 0;
+  will-change: filter;
+  contain: strict;
 }
 .proj-item-bg.lighter {
-  filter: url(#duotone-brown) brightness(0.375);
+  filter: brightness(0.375);
 }
 .proj-item-bg::after { display: none; }
 .proj-item:hover .proj-item-bg,
@@ -662,7 +664,6 @@ html, body {
     <polygon points="1,1 1,14 4,11 7,17 8,17 5,10 10,10 1,1" fill="#ff33a1"/>
   </svg>
 </div>
-<canvas id="star-trail" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;z-index:99999998;will-change:contents;"></canvas>
 
 <!-- SPLASH / ENTER SCREEN -->
 <div id="splash" role="dialog" aria-modal="true" aria-label="Welcome to Dreamweave Studio">
@@ -776,7 +777,7 @@ html, body {
     <div class="win-body">
       <div class="proj-grid" id="proj-grid">
         <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('ls-menu-window', event)">
-          <div class="proj-item-bg lighter" style="background-image: url('https://i.imgur.com/7L3sM1h.jpeg');"></div>
+          <div class="proj-item-bg lighter" data-src="https://i.imgur.com/7L3sM1h.jpeg"></div>
           <div class="work-num">01</div>
           <div class="work-title">LAUNDRY SLAY</div>
           <div class="work-medium">PHOTOSHOOT · VIDEO SHOOT</div>
@@ -784,7 +785,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('ml-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/XcEikom.jpeg');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/XcEikom.jpeg"></div>
           <div class="work-num">02</div>
           <div class="work-title">MARSHMALLOW LOVER</div>
           <div class="work-medium">MUSIC VIDEO</div>
@@ -801,7 +802,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div> -->
         <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('mt-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/CkfeJ0s.jpeg');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/CkfeJ0s.jpeg"></div>
           <div class="work-num">03</div>
           <div class="work-title">MULTITASKERS</div>
           <div class="work-medium">PHOTOSHOOT</div>
@@ -809,7 +810,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="branding pixel-art" onclick="openProjMenu('tv-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/LRq3whC.png');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/LRq3whC.png"></div>
           <div class="work-num">04</div>
           <div class="work-title">TWILIGHT + VINE</div>
           <div class="work-medium">LOGO · BRANDING</div>
@@ -817,7 +818,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="pixel-art" onclick="openProjMenu('cc-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/xnzsjyX.gif');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/xnzsjyX.gif"></div>
           <div class="work-num">05</div>
           <div class="work-title">COFFEE CAT</div>
           <div class="work-medium">PIXEL ANIMATION</div>
@@ -825,7 +826,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="pixel-art" onclick="openProjMenu('ly-menu-window', event)">
-          <div class="proj-item-bg lighter" style="background-image: url('https://i.imgur.com/WVbk56X.gif');"></div>
+          <div class="proj-item-bg lighter" data-src="https://i.imgur.com/WVbk56X.gif"></div>
           <div class="work-num">06</div>
           <div class="work-title">LUNA YEN</div>
           <div class="work-medium">PIXEL ANIMATION</div>
@@ -833,7 +834,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="branding" onclick="openProjMenu('lavande-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/RCsnloe.png');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/RCsnloe.png"></div>
           <div class="work-num">07</div>
           <div class="work-title">LAVANDE</div>
           <div class="work-medium">LOGO · BRANDING</div>
@@ -841,7 +842,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="pixel-art" onclick="openProjMenu('coven-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/qEpc8y0.gif');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/qEpc8y0.gif"></div>
           <div class="work-num">08</div>
           <div class="work-title">COVEN COLLECTIVE</div>
           <div class="work-medium">PIXEL ANIMATIONS</div>
@@ -849,7 +850,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="branding" onclick="openProjMenu('ljd-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/HPyDsZO.gif');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/HPyDsZO.gif"></div>
           <div class="work-num">09</div>
           <div class="work-title">LADYJANEDANCE.COM</div>
           <div class="work-medium">WEBSITE · BRANDING</div>
@@ -857,7 +858,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="branding" onclick="openProjMenu('bbt-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/alTvnJP.png');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/alTvnJP.png"></div>
           <div class="work-num">10</div>
           <div class="work-title">THE BACKWARDS BIKINI TOP</div>
           <div class="work-medium">LOGO · BRANDING</div>
@@ -865,7 +866,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="branding motion-graphic" onclick="openProjMenu('bs-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/QBfaKai.gif');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/QBfaKai.gif"></div>
           <div class="work-num">11</div>
           <div class="work-title">BUBBLE SKINCARE</div>
           <div class="work-medium">MOTION GRAPHIC</div>
@@ -873,7 +874,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('dyp-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/gdnumam.gif');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/gdnumam.gif"></div>
           <div class="work-num">12</div>
           <div class="work-title">DO YOU PLEASER?</div>
           <div class="work-medium">SOCIAL REEL</div>
@@ -881,7 +882,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="game-design pixel-art" onclick="openProjMenu('conga-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/X63HWac.gif');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/X63HWac.gif"></div>
           <div class="work-num">13</div>
           <div class="work-title">CONGA CRITTERS</div>
           <div class="work-medium">VIDEO GAME</div>
@@ -889,7 +890,7 @@ html, body {
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="game-design pixel-art" onclick="openProjMenu('reverb-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/FXjhtPm.gif');"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/FXjhtPm.gif"></div>
           <div class="work-num">14</div>
           <div class="work-title">REVERB</div>
           <div class="work-medium">VIDEO GAME</div>
@@ -900,6 +901,12 @@ html, body {
     </div>
     <div class="win-statusbar">
       <span id="proj-count">14 PROJECTS</span>
+      <span id="proj-load-bar-wrap" style="flex:1;display:flex;align-items:center;gap:6px;transition:opacity 0.4s ease;">
+        <span style="font-size:11px;color:var(--pink-dim);letter-spacing:1px;white-space:nowrap;">LOADING</span>
+        <span style="flex:1;height:4px;background:var(--pink-faint);border:1px solid var(--pink-border);display:block;position:relative;overflow:hidden;">
+          <span id="proj-load-bar" style="position:absolute;left:0;top:0;height:100%;width:0%;background:var(--pink);box-shadow:0 0 6px var(--pink);transition:width 0.15s ease;"></span>
+        </span>
+      </span>
       <span>DREAMWEAVE STUDIO</span>
     </div>
     <div class="resize-handle resize-se" onmousedown="startResize(event,'folder-window','se')" ontouchstart="startResize(event,'folder-window','se')"></div>
@@ -1372,68 +1379,6 @@ function setCursorDefault() {
   svg.innerHTML = cursorDefault;
 }
 
-// ── Star trail ──
-(function() {
-  const canvas = document.getElementById('star-trail');
-  const ctx = canvas.getContext('2d');
-  const stars = [];
-
-  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-  window.addEventListener('resize', resize);
-  resize();
-
-  function drawPixelStar(x, y, size, alpha) {
-    ctx.fillStyle = `rgba(255,51,161,${alpha})`;
-    // centre
-    ctx.fillRect(x, y, size, size);
-    // arms
-    ctx.fillStyle = `rgba(255,51,161,${alpha * 0.7})`;
-    ctx.fillRect(x - size, y, size, size);
-    ctx.fillRect(x + size, y, size, size);
-    ctx.fillRect(x, y - size, size, size);
-    ctx.fillRect(x, y + size, size, size);
-  }
-
-  function drawPixelDot(x, y, size, alpha) {
-    ctx.fillStyle = `rgba(255,51,161,${alpha})`;
-    ctx.fillRect(x, y, size, size);
-  }
-
-  let sparkleRunning = false;
-  function tick() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = stars.length - 1; i >= 0; i--) {
-      const s = stars[i];
-      s.alpha -= s.decay;
-      if (s.alpha <= 0) { stars.splice(i, 1); continue; }
-      if (s.type === 'plus') drawPixelStar(s.x, s.y, s.size, s.alpha);
-      else drawPixelDot(s.x, s.y, s.size, s.alpha);
-    }
-    if (stars.length > 0) {
-      requestAnimationFrame(tick);
-    } else {
-      sparkleRunning = false;
-    }
-  }
-
-  let lastSparkle = 0;
-  document.addEventListener('mousemove', e => {
-    const now = performance.now();
-    if (now - lastSparkle < 60) return; // was 40ms, now 60ms
-    lastSparkle = now;
-    if (Math.random() > 0.4) return;
-    if (stars.length > 20) return; // was 30, now 20
-    stars.push({
-      x: e.clientX + (Math.random() * 10 - 5),
-      y: e.clientY + (Math.random() * 10 - 5),
-      size: Math.random() > 0.6 ? 3 : 2,
-      alpha: 0.7 + Math.random() * 0.3,
-      decay: 0.025 + Math.random() * 0.03,
-      type: Math.random() > 0.5 ? 'plus' : 'dot'
-    });
-    if (!sparkleRunning) { sparkleRunning = true; requestAnimationFrame(tick); }
-  });
-})();
 // ── SoundCloud Player ──
 let scWidget, scPlaying = false;
 
@@ -1962,6 +1907,46 @@ function filterProjects(cat, el) {
   document.getElementById('proj-count').textContent = count + ' PROJECT' + (count !== 1 ? 'S' : '');
 }
 
+// ── STAGGERED PROJECT BACKGROUND LOADER ──
+// Loads all backgrounds when portfolio opens, 40ms apart so the
+// browser doesn't slam 14 network requests simultaneously.
+// Shows a progress bar in the statusbar while fetching.
+let _projBgsLoaded = false;
+
+function loadAllProjBgs() {
+  if (_projBgsLoaded) return;
+  _projBgsLoaded = true;
+
+  const bgs = [...document.querySelectorAll('.proj-item-bg[data-src]')];
+  if (!bgs.length) return;
+
+  const bar = document.getElementById('proj-load-bar');
+  const barWrap = document.getElementById('proj-load-bar-wrap');
+  let loaded = 0;
+
+  function onLoad() {
+    loaded++;
+    const pct = Math.round((loaded / bgs.length) * 100);
+    if (bar) bar.style.width = pct + '%';
+    if (loaded === bgs.length && barWrap) {
+      setTimeout(() => { barWrap.style.opacity = '0'; }, 400);
+    }
+  }
+
+  bgs.forEach((bg, i) => {
+    setTimeout(() => {
+      const src = bg.dataset.src;
+      const img = new Image();
+      img.onload = () => {
+        bg.style.backgroundImage = "url('" + src + "')";
+        onLoad();
+      };
+      img.onerror = onLoad;
+      img.src = src;
+    }, i * 40);
+  });
+}
+
 // Window management
 let z = 10000;
 const openWindows = new Set();
@@ -1973,6 +1958,7 @@ function openWindow(id) {
   raiseWindow(win);
   openWindows.add(id);
   updateTaskbar();
+  if (id === 'folder-window') loadAllProjBgs();
   closeStartMenu();
 }
 
@@ -2642,19 +2628,6 @@ document.addEventListener('pointerdown', e => {
 
 </script>
 
-<!-- duotone filter: shadows=#100805, highlights=#291d14 -->
-<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute">
-  <defs>
-    <filter id="duotone-brown">
-      <feColorMatrix type="saturate" values="0"/>
-      <feComponentTransfer>
-        <feFuncR type="table" tableValues="0.063 0.161"/>
-        <feFuncG type="table" tableValues="0.031 0.114"/>
-        <feFuncB type="table" tableValues="0.020 0.078"/>
-      </feComponentTransfer>
-    </filter>
-  </defs>
-</svg>
 <div id="cat-popup-window" class="window" role="alertdialog" aria-label="You have received a cat" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:240px;z-index:99000;" onclick="event.stopPropagation()">
   <div class="titlebar"><div class="titlebar-btns"><div class="tb-btn" onclick="closeCatPopup(event)">✕</div></div><div class="titlebar-text">MEOW!</div></div>
   <div class="win-body" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px;">
