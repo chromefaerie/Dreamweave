@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dreamweave Studio — Desktop</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -444,47 +445,9 @@ html, body {
 }
 
 .win-menu-item.active-filter { background: var(--pink); color: #1a0a08; }
-  display: flex;
-  align-items: center;
-  padding: 3px 6px;
-  border-bottom: 1px solid var(--pink-border);
-  gap: 3px;
-  flex-shrink: 0;
-}
-.folder-tb-btn {
-  padding: 1px 7px;
-  font-size: 12px;
-  color: var(--pink-dim);
-  border: 1px solid var(--pink-border);
-  letter-spacing: 1px;
-  cursor: none;
-}
-.folder-tb-btn:hover { background: var(--pink-faint); color: var(--pink); }
-.folder-path { font-size: 12px; color: var(--pink-dim); padding: 0 6px; flex: 1; letter-spacing: 1px; }
-.folder-path span { color: var(--pink); }
 
 /* ── PROJECTS ── */
 .folder-window { top: 30px; left: 180px; width: 440px; height: 630px; }
-
-.folder-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  padding: 8px;
-  gap: 2px;
-}
-
-.folder-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 8px 3px;
-  cursor: none;
-  border: 1px solid transparent;
-}
-.folder-item:hover { background: rgba(255,51,161,0.09); border-color: var(--pink-border); }
-.folder-item .f-icon { width: 32px; height: 32px; image-rendering: pixelated; filter: drop-shadow(0 0 4px rgba(255,51,161,0.4)); }
-.folder-item .f-label { font-size: 11px; color: var(--pink); text-align: center; letter-spacing: 0.5px; line-height: 1.1; }
 
 .about-window { top: 65px; right: 160px; left: auto; width: 290px; }
 .about-body { padding: 14px; }
@@ -554,7 +517,6 @@ html, body {
   letter-spacing: 1px; cursor: none; white-space: nowrap;
 }
 .taskbar-tab:hover, .taskbar-tab.active { background: var(--pink-faint); color: var(--pink); border-color: rgba(255,51,161,0.45); }
-.tab-dot { width: 5px; height: 5px; background: var(--pink); flex-shrink: 0; }
 .tab-close { margin-left: 6px; font-size: 10px; color: var(--pink-dim); cursor: none; line-height: 1; }
 .tab-close:hover { color: var(--pink); }
 
@@ -829,17 +791,18 @@ html, body {
           <div class="work-sub">creative director · coming soon: spring 2026</div>
           <div class="work-item-bar"></div>
         </div>
-        <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('nb-menu-window', event)">
+        <!-- HIDDEN: Nick+Becca — restore after proposal! -->
+        <!-- <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('nb-menu-window', event)">
           <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/MxbgVpV.jpeg');"></div>
           <div class="work-num">03</div>
           <div class="work-title">NICK + BECCA</div>
           <div class="work-medium">PHOTOSHOOT</div>
           <div class="work-sub">creative director · coming soon: spring 2026</div>
           <div class="work-item-bar"></div>
-        </div>
+        </div> -->
         <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('mt-menu-window', event)">
           <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/CkfeJ0s.jpeg');"></div>
-          <div class="work-num">04</div>
+          <div class="work-num">03</div>
           <div class="work-title">MULTITASKERS</div>
           <div class="work-medium">PHOTOSHOOT</div>
           <div class="work-sub">creative director · feb 2026</div>
@@ -847,10 +810,18 @@ html, body {
         </div>
         <div class="proj-item" data-cat="branding pixel-art" onclick="openProjMenu('tv-menu-window', event)">
           <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/LRq3whC.png');"></div>
-          <div class="work-num">05</div>
+          <div class="work-num">04</div>
           <div class="work-title">TWILIGHT + VINE</div>
           <div class="work-medium">LOGO · BRANDING</div>
           <div class="work-sub">pixel artist · jan 2026</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="pixel-art" onclick="openProjMenu('cc-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/xnzsjyX.gif');"></div>
+          <div class="work-num">05</div>
+          <div class="work-title">COFFEE CAT</div>
+          <div class="work-medium">PIXEL ANIMATION</div>
+          <div class="work-sub">pixel artist · nov 2025</div>
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="pixel-art" onclick="openProjMenu('ly-menu-window', event)">
@@ -877,17 +848,9 @@ html, body {
           <div class="work-sub">pixel artist · jun 2025</div>
           <div class="work-item-bar"></div>
         </div>
-        <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('dyp-menu-window', event)">
-          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/gdnumam.gif');"></div>
-          <div class="work-num">09</div>
-          <div class="work-title">DO YOU PLEASER?</div>
-          <div class="work-medium">SOCIAL REEL</div>
-          <div class="work-sub">creative director · editor · feb 2024</div>
-          <div class="work-item-bar"></div>
-        </div>
         <div class="proj-item" data-cat="branding" onclick="openProjMenu('ljd-menu-window', event)">
           <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/HPyDsZO.gif');"></div>
-          <div class="work-num">10</div>
+          <div class="work-num">09</div>
           <div class="work-title">LADYJANEDANCE.COM</div>
           <div class="work-medium">WEBSITE · BRANDING</div>
           <div class="work-sub">web designer · jul 2024</div>
@@ -895,7 +858,7 @@ html, body {
         </div>
         <div class="proj-item" data-cat="branding" onclick="openProjMenu('bbt-menu-window', event)">
           <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/alTvnJP.png');"></div>
-          <div class="work-num">11</div>
+          <div class="work-num">10</div>
           <div class="work-title">THE BACKWARDS BIKINI TOP</div>
           <div class="work-medium">LOGO · BRANDING</div>
           <div class="work-sub">graphic designer · jul 2024</div>
@@ -903,13 +866,21 @@ html, body {
         </div>
         <div class="proj-item" data-cat="branding motion-graphic" onclick="openProjMenu('bs-menu-window', event)">
           <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/QBfaKai.gif');"></div>
-          <div class="work-num">12</div>
+          <div class="work-num">11</div>
           <div class="work-title">BUBBLE SKINCARE</div>
           <div class="work-medium">MOTION GRAPHIC</div>
           <div class="work-sub">motion graphic designer · apr 2024</div>
           <div class="work-item-bar"></div>
         </div>
-        <div class="proj-item" data-cat="game-design pixel-art" onclick="openProjMenu('cc-menu-window', event)">
+        <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('dyp-menu-window', event)">
+          <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/gdnumam.gif');"></div>
+          <div class="work-num">12</div>
+          <div class="work-title">DO YOU PLEASER?</div>
+          <div class="work-medium">SOCIAL REEL</div>
+          <div class="work-sub">creative director · editor · feb 2024</div>
+          <div class="work-item-bar"></div>
+        </div>
+        <div class="proj-item" data-cat="game-design pixel-art" onclick="openProjMenu('conga-menu-window', event)">
           <div class="proj-item-bg" style="background-image: url('https://i.imgur.com/X63HWac.gif');"></div>
           <div class="work-num">13</div>
           <div class="work-title">CONGA CRITTERS</div>
@@ -957,13 +928,22 @@ html, body {
     </div>
   </div>
 
-  <!-- ── NICK + BECCA MENU ── -->
+  <!-- HIDDEN: Nick+Becca — restore after proposal! -->
+  <!--
   <div class="window hidden" id="nb-menu-window" style="top:180px;left:300px;width:260px;">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">A BUZZ OF AN ENGAGEMENT</span><span onclick="closeProjMenu('nb-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
       <div class="dialog-btn" onclick="openProjectFromMenu('NICK + BECCA — PITCH DECK', 'https://www.canva.com/design/DAHDAB8J2cM/tEbT-vqMoiEuVX7Yl4djnA/view?embed')">✦ PITCH DECK</div>
       <div class="dialog-btn" onclick="openProjectFromMenu('NICK + BECCA — PHOTOS', '')">✦ PHOTOS</div>
       <div class="dialog-btn" onclick="openProjectFromMenu('NICK + BECCA — BTS', '')">✦ BTS</div>
       <div class="dialog-btn" onclick="openTeamWindow('NICK + BECCA')">✦ TEAM</div>
+    </div>
+  </div>
+  -->
+
+  <!-- ── COFFEE CAT MENU ── -->
+  <div class="window hidden" id="cc-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">HAPPY 10 YEARS HIDE + SEEK!</span><span onclick="closeProjMenu('cc-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openProjectFromMenu('COFFEE CAT — ANIMATION', 'https://i.imgur.com/xnzsjyX.gif')">✦ ANIMATION</div>
     </div>
   </div>
 
@@ -1016,8 +996,8 @@ html, body {
   </div>
 
   <!-- ── CONGA CRITTERS MENU ── -->
-  <div class="window hidden" id="cc-menu-window" style="top:180px;left:300px;width:260px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">IF SNAKE WAS A RACCOON PARTY</span><span onclick="closeProjMenu('cc-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+  <div class="window hidden" id="conga-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">IF SNAKE WAS A RACCOON PARTY</span><span onclick="closeProjMenu('conga-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
       <div class="dialog-btn" onclick="openProjectFromMenu('CONGA CRITTERS — CONCEPT ART', 'https://www.canva.com/design/DAHDkl8b_n0/aiNSjkqZHPKelZXIeoVTaw/view?embed')">✦ CONCEPT ART</div>
       <div class="dialog-btn" onclick="openProjectFromMenu('CONGA CRITTERS — PLAY GAME', '')">✦ PLAY GAME</div>
     </div>
@@ -2044,7 +2024,7 @@ function toggleCollapse(id) {
   updateTaskbar();
 }
 
-const projMenuIds = ['ml-menu-window','ls-menu-window','nb-menu-window','mt-menu-window','tv-menu-window','ly-menu-window','dyp-menu-window','ljd-menu-window','bbt-menu-window','cc-menu-window','bs-menu-window','lavande-menu-window','reverb-menu-window','coven-menu-window'];
+const projMenuIds = ['ml-menu-window','ls-menu-window','mt-menu-window','tv-menu-window','ly-menu-window','dyp-menu-window','ljd-menu-window','bbt-menu-window','cc-menu-window','bs-menu-window','lavande-menu-window','reverb-menu-window','coven-menu-window','conga-menu-window'];
 
 const tabLabels = {
   'folder-window':      '꩜ PORTFOLIO',
@@ -2118,13 +2098,38 @@ function startDrag(e, id) {
   document.addEventListener('touchend', onUp);
 }
 
-function sendContact() {
+async function sendContact() {
   const name    = document.getElementById('contact-name').value.trim();
   const email   = document.getElementById('contact-email').value.trim();
   const message = document.getElementById('contact-message').value.trim();
-  const subject = encodeURIComponent('Dreamweave Studio — Message from ' + (name || 'visitor'));
-  const body    = encodeURIComponent((email ? 'From: ' + email + '\n\n' : '') + (message || ''));
-  window.location.href = 'mailto:sonja.schouten4@gmail.com?subject=' + subject + '&body=' + body;
+  if (!name || !email || !message) return;
+
+  const sendBtn = document.querySelector('#contact-window .dialog-btn.primary');
+  if (sendBtn) { sendBtn.textContent = 'SENDING...'; sendBtn.style.pointerEvents = 'none'; }
+
+  try {
+    const res = await fetch('https://formspree.io/f/maqpdngl', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, message })
+    });
+    if (res.ok) {
+      document.getElementById('contact-name').value = '';
+      document.getElementById('contact-email').value = '';
+      document.getElementById('contact-message').value = '';
+      if (sendBtn) { sendBtn.textContent = '✦ SENT ✦'; }
+      setTimeout(() => {
+        closeWindow('contact-window');
+        if (sendBtn) { sendBtn.textContent = 'SEND →'; sendBtn.style.pointerEvents = ''; }
+      }, 2000);
+    } else {
+      if (sendBtn) { sendBtn.textContent = '✕ ERROR — RETRY'; sendBtn.style.pointerEvents = ''; }
+      setTimeout(() => { if (sendBtn) sendBtn.textContent = 'SEND →'; }, 3000);
+    }
+  } catch {
+    if (sendBtn) { sendBtn.textContent = '✕ NO CONNECTION'; sendBtn.style.pointerEvents = ''; }
+    setTimeout(() => { if (sendBtn) sendBtn.textContent = 'SEND →'; }, 3000);
+  }
 }
 
  function openProjMenu(menuId, e) {
@@ -2169,12 +2174,6 @@ const TEAM_DATA = {
     { role: 'VIDEOGRAPHER · EDITOR', name: 'DEANNA MILLIGAN', handle: 'SUBLUNAR FILMS' },
     { role: 'SONG', name: 'MARSHMALLOW LOVER', handle: 'WRITTEN AND PERFORMED BY CAITLIN ACKEN TAYLOR' },
     { role: 'TALENT', name: 'CAITLIN ACKEN TAYLOR', handle: '@OAKANDBONE' },
-  ],
-  'NICK + BECCA': [
-    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
-    { role: 'PRODUCER', name: 'CAITLIN ACKEN TAYLOR', handle: 'OAK AND BONE PRODUCTIONS' },
-    { role: 'PHOTOGRAPHER', name: 'DANIEL TAGGART-HODGE', handle: '@DTH.35MM' },
-    { role: 'MODELS', name: 'NICK MARSON + BECCA MITCHELL', handle: '' },
   ],
   'MULTITASKERS': [
     { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
@@ -2371,22 +2370,6 @@ let paintColour = '#ff33a1';
 let paintDrawing = false;
 let paintLastX = null, paintLastY = null;
 let paintSnapshot = null; // for line/rect preview
-
-function initPaint() {
-  // Build palette
-  const pal = document.getElementById('paint-palette');
-  pal.innerHTML = '';
-  paintPalette.forEach(c => {
-    const sw = document.createElement('div');
-    sw.className = 'paint-swatch';
-    sw.style.background = c;
-    sw.onclick = () => { paintColour = c; updatePaintUI(); };
-    pal.appendChild(sw);
-  });
-
-  // Size canvas to its container
-  resizePaintCanvas();
-}
 
 function resizePaintCanvas() {
   const win = document.getElementById('paint-window');
