@@ -299,23 +299,23 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
 }
 .pw-btn {
-  font-size: 18px;
   color: var(--pink-dim);
-  padding: 4px;
-  transition: color 0.2s;
-}
-.pw-btn:active { color: var(--pink); }
-.pw-btn-main {
-  font-size: 20px;
-  color: var(--pink);
-  width: 36px; height: 36px;
+  width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
-  padding-left: 3px;
   border: 1px solid var(--pink-border);
   border-radius: 50%;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.pw-btn:active { color: var(--pink); background: var(--pink-faint); border-color: var(--pink); }
+.pw-btn svg { display: block; }
+.pw-btn-main {
+  color: var(--pink);
+  width: 40px; height: 40px;
+  border-color: var(--pink);
 }
 .pw-btn-main:active { background: var(--pink-faint); }
 
@@ -940,9 +940,15 @@ svg.filters { position: absolute; width: 0; height: 0; }
             <div class="player-progress-fill" id="m-player-fill"></div>
           </div>
           <div class="player-widget-controls">
-            <div class="pw-btn" onclick="event.stopPropagation();mScPrev()" role="button" aria-label="Previous track"><span style="font-family:var(--font);font-size:18px;">|◀◀</span></div>
-            <div class="pw-btn pw-btn-main" id="m-play-btn" onclick="event.stopPropagation();mScToggle()" role="button" aria-label="Play or pause" style="font-family:var(--font);font-size:20px;">▶</div>
-            <div class="pw-btn" onclick="event.stopPropagation();mScNext()" role="button" aria-label="Next track"><span style="font-family:var(--font);font-size:18px;">▶▶|</span></div>
+            <div class="pw-btn" onclick="event.stopPropagation();mScPrev()" role="button" aria-label="Previous track">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="1" width="2" height="12"/><polygon points="12,1 3,7 12,13"/></svg>
+            </div>
+            <div class="pw-btn pw-btn-main" id="m-play-btn" onclick="event.stopPropagation();mScToggle()" role="button" aria-label="Play or pause">
+              <svg id="m-play-icon" width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><polygon points="2,1 13,7 2,13"/></svg>
+            </div>
+            <div class="pw-btn" onclick="event.stopPropagation();mScNext()" role="button" aria-label="Next track">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="12" y="1" width="2" height="12"/><polygon points="2,1 11,7 2,13"/></svg>
+            </div>
           </div>
         </div>
       </div>
@@ -1563,17 +1569,103 @@ closeBottomSheet = function() {
 };
 
 // ── CONTACT SEND ──
-function mSendContact() {
+async function mSendContact() {
   const name = document.getElementById('m-contact-name').value.trim();
   const email = document.getElementById('m-contact-email').value.trim();
   const msg = document.getElementById('m-contact-message').value.trim();
   if (!name || !email || !msg) return;
-  document.getElementById('m-contact-confirm').style.display = 'block';
-  document.getElementById('m-contact-name').value = '';
-  document.getElementById('m-contact-email').value = '';
-  document.getElementById('m-contact-message').value = '';
-  setTimeout(() => { document.getElementById('m-contact-confirm').style.display = 'none'; }, 3000);
+
+  const sendBtn = document.querySelector('#m-contact-popup .m-dialog-btn.primary');
+  const confirm = document.getElementById('m-contact-confirm');
+  if (sendBtn) { sendBtn.textContent = 'SENDING...'; sendBtn.style.pointerEvents = 'none'; }
+
+  try {
+    const res = await fetch('https://formspree.io/f/maqpdngl', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, message: msg })
+    });
+
+    if (res.ok) {
+      confirm.textContent = '✦ MESSAGE SENT ✦';
+      confirm.style.color = 'var(--pink)';
+      confirm.style.display = 'block';
+      document.getElementById('m-contact-name').value = '';
+      document.getElementById('m-contact-email').value = '';
+      document.getElementById('m-contact-message').value = '';
+      setTimeout(() => { confirm.style.display = 'none'; mCloseContact(); }, 2500);
+    } else {
+      confirm.textContent = '✕ SOMETHING WENT WRONG — TRY AGAIN';
+      confirm.style.color = '#ff6b6b';
+      confirm.style.display = 'block';
+      setTimeout(() => { confirm.style.display = 'none'; }, 3000);
+    }
+  } catch (err) {
+    confirm.textContent = '✕ NO CONNECTION — TRY AGAIN';
+    confirm.style.color = '#ff6b6b';
+    confirm.style.display = 'block';
+    setTimeout(() => { confirm.style.display = 'none'; }, 3000);
+  } finally {
+    if (sendBtn) { sendBtn.textContent = 'SEND →'; sendBtn.style.pointerEvents = ''; }
+  }
 }
+
+// ── TAP SPARKLE BURST (home screen only) ──
+(function() {
+  const home = document.getElementById('home-screen');
+  if (!home) return;
+
+  function burst(x, y) {
+    const count = 8 + Math.floor(Math.random() * 6);
+    for (let i = 0; i < count; i++) {
+      const star = document.createElement('div');
+      const size = Math.random() > 0.5 ? 4 : 2;
+      const angle = (Math.PI * 2 / count) * i + (Math.random() * 0.4);
+      const dist = 18 + Math.random() * 28;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      star.style.cssText = `
+        position: fixed;
+        pointer-events: none;
+        z-index: 9999;
+        width: ${size}px;
+        height: ${size}px;
+        background: #ff33a1;
+        box-shadow: 0 0 4px #ff33a1;
+        left: ${x}px;
+        top: ${y}px;
+        opacity: 1;
+        transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+        will-change: transform, opacity;
+      `;
+      document.body.appendChild(star);
+      requestAnimationFrame(() => {
+        star.style.transform = `translate(${dx}px, ${dy}px)`;
+        star.style.opacity = '0';
+      });
+      setTimeout(() => star.remove(), 450);
+    }
+    // centre flash
+    const flash = document.createElement('div');
+    flash.style.cssText = `
+      position: fixed; pointer-events: none; z-index: 9999;
+      width: 6px; height: 6px; background: #ff33a1;
+      box-shadow: 0 0 8px 2px #ff33a1;
+      left: ${x - 3}px; top: ${y - 3}px;
+      opacity: 1; transition: opacity 0.25s ease-out;
+    `;
+    document.body.appendChild(flash);
+    requestAnimationFrame(() => { flash.style.opacity = '0'; });
+    setTimeout(() => flash.remove(), 280);
+  }
+
+  home.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    // only burst if tapping on home screen background or icons, not dock
+    if (t.target.closest('#m-dock')) return;
+    burst(t.clientX, t.clientY);
+  }, { passive: true });
+})();
 
 // ── BOTTOM SHEET SWIPE DOWN TO CLOSE ──
 (function() {
@@ -1929,12 +2021,12 @@ function loadSoundCloud() {
       });
       mScWidget.bind(SC.Widget.Events.PLAY, () => {
         mScPlaying = true;
-        document.getElementById('m-play-btn').textContent = '||';
+        document.getElementById('m-play-btn').innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="1" width="4" height="12"/><rect x="9" y="1" width="4" height="12"/></svg>';
         mUpdateTitle();
       });
       mScWidget.bind(SC.Widget.Events.PAUSE, () => {
         mScPlaying = false;
-        document.getElementById('m-play-btn').textContent = '▶';
+        document.getElementById('m-play-btn').innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><polygon points="2,1 13,7 2,13"/></svg>';
       });
       mScWidget.bind(SC.Widget.Events.PLAY_PROGRESS, obj => {
         mScWidget.getDuration(d => {
@@ -1946,7 +2038,7 @@ function loadSoundCloud() {
         setTimeout(() => {
           mScWidget.seekTo(0); mScWidget.play();
           mScPlaying = true;
-          document.getElementById('m-play-btn').textContent = '||';
+          document.getElementById('m-play-btn').innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="1" width="4" height="12"/><rect x="9" y="1" width="4" height="12"/></svg>';
           document.getElementById('m-player-fill').style.width = '0%';
           mUpdateTitle();
         }, 300);
