@@ -1424,6 +1424,18 @@ function mOpenProjSheet(title, tagline, items, triggerEl) {
   activeProjItem = triggerEl || null;
   if (activeProjItem) activeProjItem.classList.add('proj-active');
 
+  // Preload any gallery or direct image URLs so they're cached by the time user taps
+  const GALLERY_URLS = {
+    'ck-gallery': ['https://i.imgur.com/7oLwzsS.jpeg','https://i.imgur.com/oIZPoPz.jpeg','https://i.imgur.com/DPgzD26.jpeg'],
+    'coven-gallery': ['https://i.imgur.com/qEpc8y0.gif','https://i.imgur.com/2GPTJYq.gif','https://i.imgur.com/1y86xoh.gif','https://i.imgur.com/JTGgtky.gif'],
+    'mt-gallery': ['https://i.imgur.com/aL9dyFp.jpeg','https://i.imgur.com/7E94e3b.jpeg','https://i.imgur.com/37BmTGv.jpeg','https://i.imgur.com/F5ulxwp.jpeg','https://i.imgur.com/nIIHHRf.jpeg','https://i.imgur.com/slumd7B.jpeg'],
+  };
+  items.forEach(item => {
+    if (!item.url) return;
+    const srcs = GALLERY_URLS[item.url] || (/\.(jpe?g|png|gif)(\?|$)/i.test(item.url) ? [item.url] : []);
+    srcs.forEach(src => { const i = new Image(); i.src = src; });
+  });
+
   document.getElementById('bs-title').innerHTML = title + '<br><span style="font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink);letter-spacing:2px;opacity:0.75;">' + tagline + '</span>';
   const content = document.getElementById('bs-content');
   content.innerHTML = '';
@@ -1493,18 +1505,33 @@ function mOpenMediaViewer(title, src) {
   const body = document.getElementById('m-media-body');
   body.innerHTML = '';
 
+  // Spinner — fades out when first image loads
+  const spinner = document.createElement('div');
+  spinner.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:40px 0;width:100%;transition:opacity 0.3s ease;';
+  spinner.innerHTML = '<div style="width:24px;height:24px;border:2px solid var(--pink-border);border-top-color:var(--pink);border-radius:50%;animation:spinSpiral 0.8s linear infinite;box-shadow:0 0 8px var(--pink);"></div>';
+  body.appendChild(spinner);
+  let spinnerGone = false;
+  function removeSpinner() {
+    if (spinnerGone) return;
+    spinnerGone = true;
+    spinner.style.opacity = '0';
+    setTimeout(() => spinner.remove(), 300);
+  }
+
   if (src === 'coven-gallery') {
-    ['https://i.imgur.com/qEpc8y0.gif','https://i.imgur.com/2GPTJYq.gif','https://i.imgur.com/1y86xoh.gif','https://i.imgur.com/JTGgtky.gif'].forEach(url => {
+    ['https://i.imgur.com/qEpc8y0.gif','https://i.imgur.com/2GPTJYq.gif','https://i.imgur.com/1y86xoh.gif','https://i.imgur.com/JTGgtky.gif'].forEach((url, i) => {
       const img = document.createElement('img');
       img.src = url; img.alt = 'Coven Collective animation';
       img.style.cssText = 'width:100%;display:block;';
+      if (i === 0) img.onload = removeSpinner;
       body.appendChild(img);
     });
   } else if (src === 'ck-gallery') {
-    ['https://i.imgur.com/7oLwzsS.jpeg','https://i.imgur.com/oIZPoPz.jpeg','https://i.imgur.com/DPgzD26.jpeg'].forEach(url => {
+    ['https://i.imgur.com/7oLwzsS.jpeg','https://i.imgur.com/oIZPoPz.jpeg','https://i.imgur.com/DPgzD26.jpeg'].forEach((url, i) => {
       const img = document.createElement('img');
       img.src = url; img.alt = 'Coco Klein';
       img.style.cssText = 'width:100%;display:block;';
+      if (i === 0) img.onload = removeSpinner;
       body.appendChild(img);
     });
   } else if (src === 'mt-gallery') {
@@ -1516,12 +1543,13 @@ function mOpenMediaViewer(title, src) {
       { src: 'https://i.imgur.com/nIIHHRf.jpeg', title: 'BOSS STITCH', model: 'HEATHER DUMONT' },
       { src: 'https://i.imgur.com/slumd7B.jpeg', title: '100% THAT WITCH', model: 'ROXANA FERARU' },
     ];
-    series.forEach(item => {
+    series.forEach((item, i) => {
       const wrap = document.createElement('div');
       wrap.style.cssText = 'width:100%;background:#100805;';
       const img = document.createElement('img');
       img.src = item.src; img.alt = item.title;
       img.style.cssText = 'width:100%;display:block;';
+      if (i === 0) img.onload = removeSpinner;
       const caption = document.createElement('div');
       caption.style.cssText = 'padding:8px 12px 14px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--pink-border);';
       caption.innerHTML = `<span style="font-family:var(--font);font-size:13px;color:var(--pink);letter-spacing:2px;text-shadow:0 0 6px var(--pink);">${item.title}</span><span style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:1px;">${item.model}</span>`;
@@ -1535,8 +1563,10 @@ function mOpenMediaViewer(title, src) {
       const img = document.createElement('img');
       img.src = src; img.alt = title;
       img.style.cssText = 'width:100%;display:block;';
+      img.onload = removeSpinner;
       body.appendChild(img);
     } else {
+      removeSpinner();
       const iframe = document.createElement('iframe');
       iframe.src = src;
       iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:calc(100vh - 120px);';
