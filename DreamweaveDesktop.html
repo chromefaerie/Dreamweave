@@ -849,9 +849,17 @@ html, body {
           <div class="work-sub">pixel artist · jun 2025</div>
           <div class="work-item-bar"></div>
         </div>
+        <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('ck-menu-window', event)">
+          <div class="proj-item-bg" data-src="https://i.imgur.com/7oLwzsS.jpeg"></div>
+          <div class="work-num">09</div>
+          <div class="work-title">COCO KLEIN</div>
+          <div class="work-medium">PHOTOSHOOT</div>
+          <div class="work-sub">creative director · photographer · jul 2024</div>
+          <div class="work-item-bar"></div>
+        </div>
         <div class="proj-item" data-cat="branding" onclick="openProjMenu('ljd-menu-window', event)">
           <div class="proj-item-bg" data-src="https://i.imgur.com/HPyDsZO.gif"></div>
-          <div class="work-num">09</div>
+          <div class="work-num">10</div>
           <div class="work-title">LADYJANEDANCE.COM</div>
           <div class="work-medium">WEBSITE · BRANDING</div>
           <div class="work-sub">web designer · jul 2024</div>
@@ -859,7 +867,7 @@ html, body {
         </div>
         <div class="proj-item" data-cat="branding" onclick="openProjMenu('bbt-menu-window', event)">
           <div class="proj-item-bg" data-src="https://i.imgur.com/alTvnJP.png"></div>
-          <div class="work-num">10</div>
+          <div class="work-num">11</div>
           <div class="work-title">THE BACKWARDS BIKINI TOP</div>
           <div class="work-medium">LOGO · BRANDING</div>
           <div class="work-sub">graphic designer · jul 2024</div>
@@ -867,7 +875,7 @@ html, body {
         </div>
         <div class="proj-item" data-cat="branding motion-graphic" onclick="openProjMenu('bs-menu-window', event)">
           <div class="proj-item-bg" data-src="https://i.imgur.com/QBfaKai.gif"></div>
-          <div class="work-num">11</div>
+          <div class="work-num">12</div>
           <div class="work-title">BUBBLE SKINCARE</div>
           <div class="work-medium">MOTION GRAPHIC</div>
           <div class="work-sub">motion graphic designer · apr 2024</div>
@@ -875,7 +883,7 @@ html, body {
         </div>
         <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('dyp-menu-window', event)">
           <div class="proj-item-bg" data-src="https://i.imgur.com/gdnumam.gif"></div>
-          <div class="work-num">12</div>
+          <div class="work-num">13</div>
           <div class="work-title">DO YOU PLEASER?</div>
           <div class="work-medium">SOCIAL REEL</div>
           <div class="work-sub">creative director · editor · feb 2024</div>
@@ -883,7 +891,7 @@ html, body {
         </div>
         <div class="proj-item" data-cat="game-design pixel-art" onclick="openProjMenu('conga-menu-window', event)">
           <div class="proj-item-bg" data-src="https://i.imgur.com/X63HWac.gif"></div>
-          <div class="work-num">13</div>
+          <div class="work-num">14</div>
           <div class="work-title">CONGA CRITTERS</div>
           <div class="work-medium">VIDEO GAME</div>
           <div class="work-sub">game designer · pixel artist · in development</div>
@@ -891,7 +899,7 @@ html, body {
         </div>
         <div class="proj-item" data-cat="game-design pixel-art" onclick="openProjMenu('reverb-menu-window', event)">
           <div class="proj-item-bg" data-src="https://i.imgur.com/FXjhtPm.gif"></div>
-          <div class="work-num">14</div>
+          <div class="work-num">15</div>
           <div class="work-title">REVERB</div>
           <div class="work-medium">VIDEO GAME</div>
           <div class="work-sub">game designer · pixel artist · in development</div>
@@ -900,7 +908,7 @@ html, body {
       </div>
     </div>
     <div class="win-statusbar">
-      <span id="proj-count">14 PROJECTS</span>
+      <span id="proj-count">15 PROJECTS</span>
       <span id="proj-load-bar-wrap" style="flex:1;display:flex;align-items:center;gap:6px;transition:opacity 0.4s ease;">
         <span style="font-size:11px;color:var(--pink-dim);letter-spacing:1px;white-space:nowrap;">LOADING</span>
         <span style="flex:1;height:4px;background:var(--pink-faint);border:1px solid var(--pink-border);display:block;position:relative;overflow:hidden;">
@@ -1036,6 +1044,15 @@ html, body {
   <div class="window hidden" id="coven-menu-window" style="top:180px;left:300px;width:260px;">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">SUGAR, SPICE, AND EVERYTHING NICE</span><span onclick="closeProjMenu('coven-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
       <div class="dialog-btn" onclick="openCovenGallery()">✦ ANIMATIONS</div>
+    </div>
+  </div>
+
+  <!-- ── COCO KLEIN MENU ── -->
+  <div class="window hidden" id="ck-menu-window" style="top:180px;left:300px;width:260px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">COCO KLEIN'S A SHOEFREAK</span><span onclick="closeProjMenu('ck-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
+      <div class="dialog-btn" onclick="openCocoKleinGallery()">✦ PHOTOS</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('COCO KLEIN — BTS', 'https://i.imgur.com/7KKYAyz.jpeg')">✦ BTS</div>
+      <div class="dialog-btn" onclick="openTeamWindow('COCO KLEIN')">✦ TEAM</div>
     </div>
   </div>
 
@@ -2010,7 +2027,7 @@ function toggleCollapse(id) {
   updateTaskbar();
 }
 
-const projMenuIds = ['ml-menu-window','ls-menu-window','mt-menu-window','tv-menu-window','ly-menu-window','dyp-menu-window','ljd-menu-window','bbt-menu-window','cc-menu-window','bs-menu-window','lavande-menu-window','reverb-menu-window','coven-menu-window','conga-menu-window'];
+const projMenuIds = ['ml-menu-window','ls-menu-window','mt-menu-window','tv-menu-window','ly-menu-window','dyp-menu-window','ljd-menu-window','bbt-menu-window','cc-menu-window','bs-menu-window','lavande-menu-window','reverb-menu-window','coven-menu-window','conga-menu-window','ck-menu-window'];
 
 const tabLabels = {
   'folder-window':      '꩜ PORTFOLIO',
@@ -2188,6 +2205,11 @@ const TEAM_DATA = {
     { role: 'MOTION GRAPHIC DESIGNER', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
     { role: 'CONTRACTED BY', name: 'SANDY ROSSIGNOL', handle: 'ADS FOR TARGETING' },
   ],
+  'COCO KLEIN': [
+    { role: 'CREATIVE DIRECTOR · PHOTOGRAPHER', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'PHOTOGRAPHER', name: 'SANDY ROSSIGNOL', handle: 'ADS FOR TARGETING' },
+    { role: 'MODEL', name: 'COCO KLEIN', handle: '@COCO_KLEIN' },
+  ],
 };
 
 function openTeamWindow(project) {
@@ -2259,7 +2281,7 @@ function openProject(title, url) {
   const gallery = document.getElementById('proj-viewer-gallery');
   if (gallery) gallery.style.display = 'none';
   const isImage = /\.(gif|jpg|jpeg|png|webp)(\?.*)?$/i.test(url);
-  const isPortrait = url.includes('vimeo') && (url.includes('1172293718') || url.includes('1173901749'));
+  const isPortrait = url.includes('vimeo') && (url.includes('1172293718') || url.includes('1173901749')) || url.includes('7oLwzsS') || url.includes('7KKYAyz');
   const isLunaYen = url.includes('WVbk56X');
   const isSquare = url.includes('QBfaKai') || url.includes('LRq3whC') || url.includes('DAGJLjKwrGI') || url.includes('DAGIzYAaocM') || url.includes('xyNifVo') || url.includes('gPl6GfV') || url.includes('EahOC3x') || url.includes('GnteJpo') || url.includes('LiaG0Oh') || url.includes('0k7yQmY') || url.includes('VVmbbJq') || url.includes('pnEqLrV') || url.includes('4ND4dcw');
   if (win) {
@@ -2378,6 +2400,37 @@ function openMultitaskersGallery() {
     wrap.appendChild(im);
     wrap.appendChild(caption);
     gallery.appendChild(wrap);
+  });
+  openWindow('proj-viewer-window');
+}
+
+function openCocoKleinGallery() {
+  projMenuIds.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+  document.querySelectorAll('.proj-item.active').forEach(el => el.classList.remove('active'));
+  document.getElementById('proj-viewer-title').textContent = 'COCO KLEIN — PHOTOS';
+  tabLabels['proj-viewer-window'] = 'COCO KLEIN — PHOTOS';
+  const win = document.getElementById('proj-viewer-window');
+  const iframe = document.getElementById('proj-viewer-iframe');
+  iframe.style.display = 'none';
+  let img = document.getElementById('proj-viewer-img');
+  if (img) img.style.display = 'none';
+  win.style.width = '360px';
+  win.style.height = '660px';
+  win.style.left = 'calc(50% - 180px)';
+  let gallery = document.getElementById('proj-viewer-gallery');
+  if (!gallery) {
+    gallery = document.createElement('div');
+    gallery.id = 'proj-viewer-gallery';
+    gallery.style.cssText = 'width:100%;height:100%;overflow-y:auto;overflow-x:hidden;background:#100805;scrollbar-width:thin;scrollbar-color:var(--pink-border) transparent;';
+    iframe.parentNode.insertBefore(gallery, iframe);
+  }
+  gallery.innerHTML = '';
+  gallery.style.display = 'block';
+  ['https://i.imgur.com/7oLwzsS.jpeg','https://i.imgur.com/oIZPoPz.jpeg','https://i.imgur.com/DPgzD26.jpeg'].forEach(src => {
+    const im = document.createElement('img');
+    im.src = src;
+    im.style.cssText = 'width:100%;display:block;';
+    gallery.appendChild(im);
   });
   openWindow('proj-viewer-window');
 }
