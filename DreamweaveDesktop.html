@@ -372,6 +372,11 @@ html, body {
   animation: marquee 14s linear infinite;
 }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes sonjaPulse {
+  0%, 100% { text-shadow: 0 0 8px var(--pink), 0 0 16px var(--pink), 0 0 30px var(--pink); }
+  50% { text-shadow: 0 0 4px var(--pink), 0 0 8px var(--pink); }
+}
+.sonja-link:hover { animation: sonjaPulse 1.2s ease-in-out infinite; }
 
 .player-progress-wrap { display: flex; flex-direction: column; gap: 3px; }
 .player-progress-bar {
@@ -1100,7 +1105,7 @@ html, body {
       <div class="about-body">
         <div class="about-label">DREAMWEAVE STUDIO</div>
         <hr class="about-divider">
-        <p>Welcome to Dreamweave Studio. I'm <span onclick="openWindow('who-window')" style="color:var(--pink);text-shadow:0 0 8px var(--pink),0 0 16px var(--pink),0 0 30px var(--pink);cursor:none;">SONJA SCHOUTEN</span>, a multidisciplinary artist and designer with focuses on creative direction, digital design, pixel art, and branding.</p>
+        <p>Welcome to Dreamweave Studio. I'm <span onclick="openWindow('who-window')" class="sonja-link" style="color:var(--pink);text-shadow:0 0 8px var(--pink),0 0 16px var(--pink),0 0 30px var(--pink);cursor:none;">SONJA SCHOUTEN</span>, a multidisciplinary artist and designer with focuses on creative direction, digital design, pixel art, and branding.</p>
         <p>Working in video, photo, graphic, and video game mediums, I love to infuse nostalgia and play into my projects.</p>
         <p>Tell me all about your project dreams! I work with a team of highly skilled collaborators to weave your dreams into reality.</p>
         <hr class="about-divider">
