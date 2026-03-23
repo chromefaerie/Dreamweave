@@ -1584,6 +1584,14 @@ function mOpenMediaViewer(title, src) {
       body.appendChild(img);
     } else {
       removeSpinner();
+      // Check if site is likely to block iframe embedding — open externally
+      const blockedDomains = ['ladyjanedance.com','changingplaces.ca','adsfortargeting.com'];
+      const isBlocked = blockedDomains.some(d => src.includes(d));
+      if (isBlocked) {
+        mCloseMediaViewer();
+        window.open(src, '_blank');
+        return;
+      }
       const iframe = document.createElement('iframe');
       iframe.src = src;
       iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:calc(100vh - 120px);';
