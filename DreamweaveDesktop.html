@@ -16,7 +16,7 @@
 :root {
   --bg: #291d14;
   --pink: #ff33a1;
-  --pink-dim: rgba(255,51,161,0.5);
+  --pink-dim: rgba(255,51,161,0.82);
   --pink-faint: rgba(255,51,161,0.07);
   --pink-border: rgba(255,51,161,0.25);
   --window-bg: rgba(16, 8, 5, 0.98);
@@ -459,7 +459,7 @@ html, body {
 
 .about-window { top: 65px; right: 160px; left: auto; width: 290px; }
 .about-body { padding: 14px; }
-.about-body p { font-size: 15px; color: rgba(255,51,161,0.65); line-height: 1.7; margin-bottom: 8px; letter-spacing: 0.5px; }
+.about-body p { font-size: 15px; color: rgba(255,51,161,0.8); line-height: 1.7; margin-bottom: 8px; letter-spacing: 0.5px; }
 .about-label { font-size: 12px; color: var(--pink-dim); letter-spacing: 3px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
 .about-label::before { content: '■'; font-size: 6px; color: var(--pink); }
 .about-divider { border: none; border-top: 1px solid var(--pink-border); margin: 8px 0; }
@@ -2194,9 +2194,13 @@ const TEAM_DATA = {
   ],
   'MARSHMALLOW LOVER': [
     { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
-    { role: 'VIDEOGRAPHER · EDITOR', name: 'DEANNA MILLIGAN', handle: 'SUBLUNAR FILMS' },
-    { role: 'SONG', name: 'MARSHMALLOW LOVER', handle: 'WRITTEN AND PERFORMED BY CAITLIN ACKEN TAYLOR' },
+    { role: 'DIRECTOR OF PHOTOGRAPHY', name: 'DEANNA MILLIGAN', handle: 'SUBLUNAR FILMS' },
+    { role: '1ST AC', name: 'RAMSEY FENDALL', handle: 'SUBLUNAR FILMS' },
+    { role: 'EDITOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
     { role: 'TALENT', name: 'CAITLIN ACKEN TAYLOR', handle: '@OAKANDBONE' },
+    { role: 'SONG', name: 'MARSHMALLOW LOVER', handle: 'BY CAITLIN ACKEN TAYLOR' },
+    { role: 'STYLING', name: 'SONJA SCHOUTEN + CAITLIN ACKEN TAYLOR', handle: '' },
+    { role: 'SPECIAL THANKS', name: 'SUBLUNAR FILMS', handle: 'FOR EQUIPMENT' },
   ],
   'MULTITASKERS': [
     { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
@@ -2249,11 +2253,11 @@ function openTeamWindow(project) {
         if (m.members) {
           let html = `<div style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:2px;margin-bottom:4px;">${m.role}</div>`;
           m.members.forEach(p => {
-            html += `<div style="font-family:var(--font);font-size:14px;color:var(--pink);letter-spacing:1px;line-height:1.3;">${p.name}</div><div style="font-family:var(--font);font-size:11px;color:rgba(255,51,161,0.45);letter-spacing:1px;margin-bottom:3px;">${p.handle}</div>`;
+            html += `<div style="font-family:var(--font);font-size:14px;color:var(--pink);letter-spacing:1px;line-height:1.3;">${p.name}</div><div style="font-family:var(--font);font-size:11px;color:rgba(255,51,161,0.75);letter-spacing:1px;margin-bottom:3px;">${p.handle}</div>`;
           });
           row.innerHTML = html;
         } else {
-          row.innerHTML = `<div style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:2px;">${m.role}</div><div style="font-family:var(--font);font-size:14px;color:var(--pink);letter-spacing:1px;margin-top:2px;">${m.name}</div><div style="font-family:var(--font);font-size:11px;color:rgba(255,51,161,0.45);letter-spacing:1px;">${m.handle}</div>`;
+          row.innerHTML = `<div style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:2px;">${m.role}</div><div style="font-family:var(--font);font-size:14px;color:var(--pink);letter-spacing:1px;margin-top:2px;">${m.name}</div><div style="font-family:var(--font);font-size:11px;color:rgba(255,51,161,0.75);letter-spacing:1px;">${m.handle}</div>`;
         }
         body.appendChild(row);
       });
