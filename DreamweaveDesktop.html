@@ -783,15 +783,15 @@ html, body {
     <div class="win-body">
       <div class="proj-grid" id="proj-grid">
         <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('ls-menu-window', event)">
-          <div class="proj-item-bg lighter" data-src="https://i.imgur.com/7L3sM1h.jpeg"></div>
+          <div class="proj-item-bg lighter" data-src="https://i.imgur.com/6pfXggY.jpeg"></div>
           <div class="work-num">01</div>
           <div class="work-title">LAUNDRY SLAY</div>
           <div class="work-medium">PHOTOSHOOT · VIDEO SHOOT</div>
-          <div class="work-sub">creative director · coming soon: summer 2026</div>
+          <div class="work-sub">creative director · jun 2026</div>
           <div class="work-item-bar"></div>
         </div>
         <div class="proj-item" data-cat="creative-direction" onclick="openProjMenu('ml-menu-window', event)">
-          <div class="proj-item-bg" data-src="https://i.imgur.com/XcEikom.jpeg"></div>
+          <div class="proj-item-bg" data-src="https://i.imgur.com/yITadsC.jpeg"></div>
           <div class="work-num">02</div>
           <div class="work-title">MARSHMALLOW LOVER</div>
           <div class="work-medium">MUSIC VIDEO</div>
@@ -973,9 +973,8 @@ html, body {
   <!-- ── LAUNDRY SLAY MENU ── -->
   <div class="window hidden" id="ls-menu-window" style="top:180px;left:300px;width:260px;">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">HOT GIRLS HAVE CHORES TOO</span><span onclick="closeProjMenu('ls-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
-      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — PITCH DECK', 'https://www.canva.com/design/DAHDD7HhH3c/twna8ETTnWlif6i0Udn1AA/view?embed')">✦ PITCH DECK</div>
-      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — PHOTOS', '')">✦ PHOTOS</div>
-      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — VIDEO', '')">✦ VIDEO</div>
+      <div class="dialog-btn" onclick="openLaundrySlayGallery()">✦ GALLERY</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — MOODBOARD', 'https://www.canva.com/design/DAGYgbLMjLs/bMsE5X1y7jdKoYMIXwgBHg/view?embed')">✦ MOODBOARD</div>
       <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — BTS', '')">✦ BTS</div>
       <div class="dialog-btn" onclick="openTeamWindow('LAUNDRY SLAY')">✦ TEAM</div>
     </div>
@@ -2203,10 +2202,9 @@ function closeProjMenu(menuId) {
 
 const TEAM_DATA = {
   'LAUNDRY SLAY': [
-    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
-    { role: 'PHOTOGRAPHER · VIDEOGRAPHER · EDITOR', name: 'KITTY ZHANG', handle: 'KITTY WITH PHOTOGRAPHY' },
-    { role: 'PRODUCER', name: 'CAITLIN ACKEN TAYLOR', handle: 'OAK AND BONE PRODUCTIONS' },
-    { role: 'MODEL', name: 'ALISON ALEXANDER', handle: '@THEALISONALEXANDER' },
+    { role: 'CREATIVE DIRECTOR · SET DESIGN', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'PHOTOGRAPHER · EDITOR', name: 'KITTY ZHANG', handle: '@KITTYWITHPHOTOGRAPHY' },
+    { role: 'MODEL · HMUA', name: 'ALISON ALEXANDER', handle: '@THEALISONALEXANDER' },
   ],
   'MARSHMALLOW LOVER': [
     { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
@@ -2396,7 +2394,7 @@ function openCovenGallery() {
   ['https://i.imgur.com/qEpc8y0.gif','https://i.imgur.com/2GPTJYq.gif','https://i.imgur.com/1y86xoh.gif','https://i.imgur.com/JTGgtky.gif'].forEach(src => {
     const im = document.createElement('img');
     im.src = src;
-    im.style.cssText = 'width:100%;display:block;';
+    im.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
     gallery.appendChild(im);
   });
   openWindow('proj-viewer-window');
@@ -2438,7 +2436,7 @@ function openMultitaskersGallery() {
     const im = document.createElement('img');
     im.src = item.src;
     im.alt = item.title;
-    im.style.cssText = 'width:100%;display:block;';
+    im.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
     const caption = document.createElement('div');
     caption.style.cssText = 'padding:8px 12px 14px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--pink-border);';
     caption.innerHTML = `<span style="font-family:var(--font);font-size:13px;color:var(--pink);letter-spacing:2px;text-shadow:0 0 6px var(--pink);">${item.title}</span><span style="font-family:var(--font);font-size:11px;color:var(--pink-dim);letter-spacing:1px;">${item.model}</span>`;
@@ -2474,7 +2472,7 @@ function openCocoKleinGallery() {
   ['https://i.imgur.com/7oLwzsS.jpeg','https://i.imgur.com/oIZPoPz.jpeg','https://i.imgur.com/DPgzD26.jpeg'].forEach(src => {
     const im = document.createElement('img');
     im.src = src;
-    im.style.cssText = 'width:100%;display:block;';
+    im.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
     gallery.appendChild(im);
   });
   openWindow('proj-viewer-window');
@@ -2555,9 +2553,44 @@ function openOffScriptGallery() {
   ['https://i.imgur.com/u8UsoEq.png','https://i.imgur.com/a9GAIbC.png','https://i.imgur.com/7Hermo7.png','https://i.imgur.com/3a89OLZ.png'].forEach(src => {
     const im = document.createElement('img');
     im.src = src;
-    im.style.cssText = 'width:100%;display:block;';
+    im.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
     gallery.appendChild(im);
   });
+  openWindow('proj-viewer-window');
+}
+
+function openLaundrySlayGallery() {
+  projMenuIds.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+  document.querySelectorAll('.proj-item.active').forEach(el => el.classList.remove('active'));
+  document.getElementById('proj-viewer-title').textContent = 'LAUNDRY SLAY — GALLERY';
+  tabLabels['proj-viewer-window'] = 'LAUNDRY SLAY — GALLERY';
+  const win = document.getElementById('proj-viewer-window');
+  const iframe = document.getElementById('proj-viewer-iframe');
+  iframe.style.display = 'none';
+  let img = document.getElementById('proj-viewer-img');
+  if (img) img.style.display = 'none';
+  win.style.width = '600px';
+  win.style.height = '620px';
+  win.style.left = 'calc(50% - 300px)';
+  let gallery = document.getElementById('proj-viewer-gallery');
+  if (!gallery) {
+    gallery = document.createElement('div');
+    gallery.id = 'proj-viewer-gallery';
+    gallery.style.cssText = 'width:100%;height:100%;overflow-y:auto;overflow-x:hidden;background:#100805;scrollbar-width:thin;scrollbar-color:var(--pink-border) transparent;';
+    iframe.parentNode.insertBefore(gallery, iframe);
+  }
+  gallery.innerHTML = '';
+  gallery.style.display = 'block';
+  const photos = ["https://i.imgur.com/6pfXggY.jpeg", "https://i.imgur.com/wTCLVde.jpeg", "https://i.imgur.com/2dmXF83.jpeg", "https://i.imgur.com/0MqLdMk.jpeg", "https://i.imgur.com/TyrTDc4.jpeg", "https://i.imgur.com/LpAHfit.jpeg", "https://i.imgur.com/eV6kn1e.jpeg", "https://i.imgur.com/q2GdAcZ.jpeg", "https://i.imgur.com/tvWud8w.jpeg", "https://i.imgur.com/omM8PBW.jpeg", "https://i.imgur.com/IHcZVWy.jpeg", "https://i.imgur.com/cckziuU.jpeg", "https://i.imgur.com/cSsqWre.jpeg"];
+  const grid = document.createElement('div');
+  grid.style.cssText = 'column-count:2;column-gap:3px;padding:3px;background:#100805;';
+  photos.forEach(src => {
+    const im = document.createElement('img');
+    im.src = src;
+    im.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
+    grid.appendChild(im);
+  });
+  gallery.appendChild(grid);
   openWindow('proj-viewer-window');
 }
 function toggleStartMenu() { const el = document.getElementById('start-menu'); if (el) el.classList.toggle('open'); }

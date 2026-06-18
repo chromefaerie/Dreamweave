@@ -1019,15 +1019,15 @@ html, body {
     <div class="m-proj-grid" id="m-proj-grid">
 
       <div class="m-proj-item" data-cat="creative-direction" onclick="mOpenProjSheet('LAUNDRY SLAY','HOT GIRLS HAVE CHORES TOO',[{label:'PITCH DECK',url:'https://www.canva.com/design/DAHDD7HhH3c/twna8ETTnWlif6i0Udn1AA/view?embed'},{label:'PHOTOS',url:''},{label:'VIDEO',url:''},{label:'BTS',url:''},{label:'TEAM',team:'LAUNDRY SLAY'}],this)" role="button">
-        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/7L3sM1h.jpeg');filter:brightness(0.5);"></div>
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/6pfXggY.jpeg');filter:brightness(0.5);"></div>
         <div class="m-proj-num">01</div>
         <div class="m-proj-title">LAUNDRY SLAY</div>
         <div class="m-proj-medium">PHOTOSHOOT · VIDEO SHOOT</div>
-        <div class="m-proj-sub">creative director · coming soon: summer 2026</div>
+        <div class="m-proj-sub">creative director · jun 2026</div>
       </div>
 
       <div class="m-proj-item" data-cat="creative-direction" onclick="mOpenProjSheet('MARSHMALLOW LOVER','MAKES ME NIBBLE NIBBLE',[{label:'PITCH DECK',url:'https://www.canva.com/design/DAHC7TaxXAU/90yZ96BfKjv2IcZh-6wyVA/view?embed'},{label:'MUSIC VIDEO',url:''},{label:'BTS',url:''},{label:'TEAM',team:'MARSHMALLOW LOVER'}],this)" role="button">
-        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/XcEikom.jpeg');filter:brightness(0.5);"></div>
+        <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/yITadsC.jpeg');filter:brightness(0.5);"></div>
         <div class="m-proj-num">02</div>
         <div class="m-proj-title">MARSHMALLOW LOVER</div>
         <div class="m-proj-medium">MUSIC VIDEO</div>
@@ -1400,10 +1400,9 @@ function mFilterProjects(cat, el) {
 // ── PROJECT BOTTOM SHEET ──
 const TEAM_DATA = {
   'LAUNDRY SLAY': [
-    { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
-    { role: 'PHOTOGRAPHER · VIDEOGRAPHER · EDITOR', name: 'KITTY ZHANG', handle: 'KITTY WITH PHOTOGRAPHY' },
-    { role: 'PRODUCER', name: 'CAITLIN ACKEN TAYLOR', handle: 'OAK AND BONE PRODUCTIONS' },
-    { role: 'MODEL', name: 'ALISON ALEXANDER', handle: '@THEALISONALEXANDER' },
+    { role: 'CREATIVE DIRECTOR · SET DESIGN', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
+    { role: 'PHOTOGRAPHER · EDITOR', name: 'KITTY ZHANG', handle: '@KITTYWITHPHOTOGRAPHY' },
+    { role: 'MODEL · HMUA', name: 'ALISON ALEXANDER', handle: '@THEALISONALEXANDER' },
   ],
   'MARSHMALLOW LOVER': [
     { role: 'CREATIVE DIRECTOR', name: 'SONJA SCHOUTEN', handle: 'DREAMWEAVE STUDIO' },
@@ -1464,6 +1463,7 @@ function mOpenProjSheet(title, tagline, items, triggerEl) {
 
   // Preload any gallery or direct image URLs so they're cached by the time user taps
   const GALLERY_URLS = {
+    'ls-gallery': ["https://i.imgur.com/6pfXggY.jpeg", "https://i.imgur.com/wTCLVde.jpeg", "https://i.imgur.com/2dmXF83.jpeg", "https://i.imgur.com/0MqLdMk.jpeg", "https://i.imgur.com/TyrTDc4.jpeg", "https://i.imgur.com/LpAHfit.jpeg", "https://i.imgur.com/eV6kn1e.jpeg", "https://i.imgur.com/q2GdAcZ.jpeg", "https://i.imgur.com/tvWud8w.jpeg", "https://i.imgur.com/omM8PBW.jpeg", "https://i.imgur.com/IHcZVWy.jpeg", "https://i.imgur.com/cckziuU.jpeg", "https://i.imgur.com/cSsqWre.jpeg"],
     'os-gallery': ['https://i.imgur.com/u8UsoEq.png','https://i.imgur.com/a9GAIbC.png','https://i.imgur.com/7Hermo7.png','https://i.imgur.com/3a89OLZ.png'],
     'ck-gallery': ['https://i.imgur.com/7oLwzsS.jpeg','https://i.imgur.com/oIZPoPz.jpeg','https://i.imgur.com/DPgzD26.jpeg'],
     'coven-gallery': ['https://i.imgur.com/qEpc8y0.gif','https://i.imgur.com/2GPTJYq.gif','https://i.imgur.com/1y86xoh.gif','https://i.imgur.com/JTGgtky.gif'],
@@ -1572,11 +1572,23 @@ function mOpenMediaViewer(title, src) {
     setTimeout(() => spinner.remove(), 300);
   }
 
-  if (src === 'os-gallery') {
+  if (src === 'ls-gallery') {
+    const photos = ["https://i.imgur.com/6pfXggY.jpeg", "https://i.imgur.com/wTCLVde.jpeg", "https://i.imgur.com/2dmXF83.jpeg", "https://i.imgur.com/0MqLdMk.jpeg", "https://i.imgur.com/TyrTDc4.jpeg", "https://i.imgur.com/LpAHfit.jpeg", "https://i.imgur.com/eV6kn1e.jpeg", "https://i.imgur.com/q2GdAcZ.jpeg", "https://i.imgur.com/tvWud8w.jpeg", "https://i.imgur.com/omM8PBW.jpeg", "https://i.imgur.com/IHcZVWy.jpeg", "https://i.imgur.com/cckziuU.jpeg", "https://i.imgur.com/cSsqWre.jpeg"];
+    const grid = document.createElement('div');
+    grid.style.cssText = 'column-count:2;column-gap:3px;padding:3px;';
+    photos.forEach((url, i) => {
+      const img = document.createElement('img');
+      img.src = url; img.alt = 'Laundry Slay';
+      img.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
+      if (i === 0) img.onload = removeSpinner;
+      grid.appendChild(img);
+    });
+    body.appendChild(grid);
+  } else if (src === 'os-gallery') {
     ['https://i.imgur.com/u8UsoEq.png','https://i.imgur.com/a9GAIbC.png','https://i.imgur.com/7Hermo7.png','https://i.imgur.com/3a89OLZ.png'].forEach((url, i) => {
       const img = document.createElement('img');
       img.src = url; img.alt = 'Off-Script Studios';
-      img.style.cssText = 'width:100%;display:block;';
+      img.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
       if (i === 0) img.onload = removeSpinner;
       body.appendChild(img);
     });
@@ -1594,7 +1606,7 @@ function mOpenMediaViewer(title, src) {
     ['https://i.imgur.com/qEpc8y0.gif','https://i.imgur.com/2GPTJYq.gif','https://i.imgur.com/1y86xoh.gif','https://i.imgur.com/JTGgtky.gif'].forEach((url, i) => {
       const img = document.createElement('img');
       img.src = url; img.alt = 'Coven Collective animation';
-      img.style.cssText = 'width:100%;display:block;';
+      img.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
       if (i === 0) img.onload = removeSpinner;
       body.appendChild(img);
     });
@@ -1602,7 +1614,7 @@ function mOpenMediaViewer(title, src) {
     ['https://i.imgur.com/7oLwzsS.jpeg','https://i.imgur.com/oIZPoPz.jpeg','https://i.imgur.com/DPgzD26.jpeg'].forEach((url, i) => {
       const img = document.createElement('img');
       img.src = url; img.alt = 'Coco Klein';
-      img.style.cssText = 'width:100%;display:block;';
+      img.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
       if (i === 0) img.onload = removeSpinner;
       body.appendChild(img);
     });
@@ -1620,7 +1632,7 @@ function mOpenMediaViewer(title, src) {
       wrap.style.cssText = 'width:100%;background:#100805;';
       const img = document.createElement('img');
       img.src = item.src; img.alt = item.title;
-      img.style.cssText = 'width:100%;display:block;';
+      img.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
       if (i === 0) img.onload = removeSpinner;
       const caption = document.createElement('div');
       caption.style.cssText = 'padding:8px 12px 14px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--pink-border);';
@@ -1634,7 +1646,7 @@ function mOpenMediaViewer(title, src) {
     if (isImage) {
       const img = document.createElement('img');
       img.src = src; img.alt = title;
-      img.style.cssText = 'width:100%;display:block;';
+      img.style.cssText = 'width:100%;display:block;break-inside:avoid;margin-bottom:3px;';
       img.onload = removeSpinner;
       body.appendChild(img);
     } else {
