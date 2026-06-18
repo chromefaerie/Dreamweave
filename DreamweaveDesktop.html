@@ -786,7 +786,7 @@ html, body {
           <div class="proj-item-bg lighter" data-src="https://i.imgur.com/6pfXggY.jpeg"></div>
           <div class="work-num">01</div>
           <div class="work-title">LAUNDRY SLAY</div>
-          <div class="work-medium">PHOTOSHOOT · VIDEO SHOOT</div>
+          <div class="work-medium">PHOTOSHOOT</div>
           <div class="work-sub">creative director · jun 2026</div>
           <div class="work-item-bar"></div>
         </div>
@@ -975,7 +975,7 @@ html, body {
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">HOT GIRLS HAVE CHORES TOO</span><span onclick="closeProjMenu('ls-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
       <div class="dialog-btn" onclick="openLaundrySlayGallery()">✦ GALLERY</div>
       <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — MOODBOARD', 'https://www.canva.com/design/DAHDD7HhH3c/twna8ETTnWlif6i0Udn1AA/view?embed')">✦ MOODBOARD</div>
-      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — BTS', '')">✦ BTS</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('LAUNDRY SLAY — BTS', 'https://player.vimeo.com/video/1202620334?badge=0&autopause=0&player_id=0&app_id=58479')">✦ BTS</div>
       <div class="dialog-btn" onclick="openTeamWindow('LAUNDRY SLAY')">✦ TEAM</div>
     </div>
   </div>
@@ -2319,7 +2319,7 @@ function openProject(title, url) {
   const gallery = document.getElementById('proj-viewer-gallery');
   if (gallery) gallery.style.display = 'none';
   const isImage = /\.(gif|jpg|jpeg|png|webp)(\?.*)?$/i.test(url);
-  const isPortrait = url.includes('vimeo') && (url.includes('1172293718') || url.includes('1173901749')) || url.includes('7oLwzsS') || url.includes('7KKYAyz');
+  const isPortrait = url.includes('vimeo') && (url.includes('1172293718') || url.includes('1173901749') || url.includes('1202620334')) || url.includes('7oLwzsS') || url.includes('7KKYAyz');
   const isScratch = url.includes('scratch.mit.edu');
   const isLunaYen = url.includes('WVbk56X');
   const isSquare = url.includes('dmENiJ5') || url.includes('3KC4gON') || url.includes('PG5hBrP') || url.includes('QBfaKai') || url.includes('LRq3whC') || url.includes('DAGJLjKwrGI') || url.includes('DAGIzYAaocM') || url.includes('xyNifVo') || url.includes('gPl6GfV') || url.includes('EahOC3x') || url.includes('GnteJpo') || url.includes('LiaG0Oh') || url.includes('0k7yQmY') || url.includes('VVmbbJq') || url.includes('pnEqLrV') || url.includes('4ND4dcw');
