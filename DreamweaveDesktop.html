@@ -2417,6 +2417,44 @@ function openProject(title, url) {
   openWindow('proj-viewer-window');
 }
 
+// "PLAY AGAIN" button for games hosted on this site (TurboWarp-packaged Scratch games).
+// The game freezes when the player loses; this shows a button over it that restarts from the title screen.
+function attachPlayAgain(iframe) {
+  iframe.addEventListener('load', () => {
+    let w;
+    try { w = iframe.contentWindow; if (!w.location.pathname.includes('CongaCritters')) return; } catch (e) { return; }
+    let tries = 0;
+    const wait = setInterval(() => {
+      const vm = w.scaffolding && w.scaffolding.vm;
+      if (!vm && ++tries < 100) return;
+      clearInterval(wait);
+      if (vm) addPlayAgainButton(w, vm);
+    }, 100);
+  });
+}
+function addPlayAgainButton(w, vm) {
+  const doc = w.document;
+  if (doc.getElementById('play-again')) return;
+  const font = doc.createElement('link');
+  font.rel = 'stylesheet';
+  font.href = 'https://fonts.googleapis.com/css2?family=VT323&display=swap';
+  doc.head.appendChild(font);
+  const btn = doc.createElement('div');
+  btn.id = 'play-again';
+  btn.setAttribute('role', 'button');
+  btn.textContent = '↻ PLAY AGAIN';
+  btn.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;font-family:'VT323',monospace;font-size:26px;letter-spacing:3px;color:#ff33a1;text-shadow:0 0 8px #ff33a1;background:rgba(16,8,5,0.95);border:2px solid #ff33a1;border-radius:8px;padding:10px 22px;white-space:nowrap;cursor:pointer;box-shadow:0 0 16px rgba(255,51,161,0.45);opacity:0;pointer-events:none;transition:opacity 0.4s ease;user-select:none;-webkit-user-select:none;touch-action:manipulation;";
+  doc.body.appendChild(btn);
+  let timer;
+  const show = () => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; };
+  const hide = () => { clearTimeout(timer); btn.style.opacity = '0'; btn.style.pointerEvents = 'none'; };
+  // Wait a moment before showing, so short pauses between game scenes never flash the button
+  vm.on('PROJECT_RUN_STOP', () => { clearTimeout(timer); timer = setTimeout(() => { if (vm.runtime.threads.length === 0) show(); }, 700); });
+  vm.on('PROJECT_RUN_START', hide);
+  btn.addEventListener('click', (e) => { e.stopPropagation(); hide(); vm.greenFlag(); });
+}
+attachPlayAgain(document.getElementById('proj-viewer-iframe'));
+
 function openCovenGallery() {
   projMenuIds.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
   document.querySelectorAll('.proj-item.active').forEach(el => el.classList.remove('active'));
