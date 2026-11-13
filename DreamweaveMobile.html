@@ -1676,6 +1676,7 @@ function mOpenMediaViewer(title, src) {
       }
       iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
       iframe.allowFullscreen = true;
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin'; // YouTube needs to know which site embeds it
       body.appendChild(iframe);
     }
   }
