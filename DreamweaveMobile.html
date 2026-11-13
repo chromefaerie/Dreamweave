@@ -1025,7 +1025,7 @@ html, body {
   <div class="app-page-body" id="portfolio-body">
     <div class="m-proj-grid" id="m-proj-grid">
 
-      <div class="m-proj-item" data-cat="game-design pixel-art" onclick="mOpenProjSheet('BIG NIGHT: THE GAME','AN EPHEMERAL CULT SIMULATOR',[{label:'ABOUT',url:'about:BIG NIGHT: THE GAME'},{label:'TEASER TRAILER',url:''},{label:'TEAM',team:'BIG NIGHT: THE GAME'}],this)" role="button">
+      <div class="m-proj-item" data-cat="game-design pixel-art" onclick="mOpenProjSheet('BIG NIGHT: THE GAME','AN EPHEMERAL CULT SIMULATOR',[{label:'ABOUT',url:'about:BIG NIGHT: THE GAME'},{label:'TEASER TRAILER',url:'https://player.vimeo.com/video/1246724370?badge=0&autopause=0&player_id=0&app_id=58479'},{label:'TEAM',team:'BIG NIGHT: THE GAME'}],this)" role="button">
         <div class="m-proj-bg" style="filter:brightness(0.5);"></div>
         <div class="m-proj-num">01</div>
         <div class="m-proj-title">BIG NIGHT: THE GAME</div>
@@ -1689,7 +1689,7 @@ function mOpenMediaViewer(title, src) {
       }
       const iframe = document.createElement('iframe');
       iframe.src = src;
-      if (src.includes('youtube.com/embed')) {
+      if (src.includes('youtube.com/embed') || src.includes('1246724370')) {
         // 16:9 widescreen video: size to the video instead of the whole screen
         iframe.style.cssText = 'width:100%;aspect-ratio:16/9;border:none;display:block;';
       } else {
