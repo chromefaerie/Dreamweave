@@ -972,7 +972,7 @@ html, body {
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0 8px;"><span style="font-family:var(--font);font-size:11px;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 12px var(--pink);letter-spacing:1px;padding:2px 5px;line-height:1.2;">MAKES ME NIBBLE NIBBLE</span><span onclick="closeProjMenu('ml-menu-window')" style="cursor:none;color:var(--pink);font-size:14px;line-height:1;padding:2px 5px;border:1px solid var(--pink-border);flex-shrink:0;">✕</span></div><div class="win-body" style="padding:4px 8px 8px;display:flex;flex-direction:column;gap:6px;">
       <div class="dialog-btn" onclick="openProjectFromMenu('MARSHMALLOW LOVER — PITCH DECK', 'https://www.canva.com/design/DAHC7TaxXAU/90yZ96BfKjv2IcZh-6wyVA/view?embed')">✦ PITCH DECK</div>
       <div class="dialog-btn" onclick="openProjectFromMenu('MARSHMALLOW LOVER — MUSIC VIDEO', 'https://www.youtube.com/embed/upYQWP5yct0?rel=0')">✦ MUSIC VIDEO</div>
-      <div class="dialog-btn" onclick="openProjectFromMenu('MARSHMALLOW LOVER — BTS', '')">✦ BTS</div>
+      <div class="dialog-btn" onclick="openProjectFromMenu('MARSHMALLOW LOVER — BTS', 'https://www.instagram.com/reel/DaZMuhNMG50/embed/')">✦ BTS</div>
       <div class="dialog-btn" onclick="openTeamWindow('MARSHMALLOW LOVER')">✦ TEAM</div>
     </div>
   </div>
@@ -2329,10 +2329,16 @@ function openProject(title, url) {
   const isPortrait = url.includes('vimeo') && (url.includes('1172293718') || url.includes('1173901749') || url.includes('1202620334')) || url.includes('7oLwzsS') || url.includes('7KKYAyz');
   const isScratch = url.includes('scratch.mit.edu');
   const isYouTube = url.includes('youtube.com/embed');
+  const isInstagram = url.includes('instagram.com/reel');
   const isLunaYen = url.includes('WVbk56X');
   const isSquare = url.includes('dmENiJ5') || url.includes('3KC4gON') || url.includes('PG5hBrP') || url.includes('QBfaKai') || url.includes('LRq3whC') || url.includes('DAGJLjKwrGI') || url.includes('DAGIzYAaocM') || url.includes('xyNifVo') || url.includes('gPl6GfV') || url.includes('EahOC3x') || url.includes('GnteJpo') || url.includes('LiaG0Oh') || url.includes('0k7yQmY') || url.includes('VVmbbJq') || url.includes('pnEqLrV') || url.includes('4ND4dcw');
   if (win) {
-    if (isYouTube) {
+    if (isInstagram) {
+      // Tall phone-shaped window for Instagram reels
+      win.style.width = '400px';
+      win.style.height = 'min(760px, calc(100vh - 100px))';
+      win.style.left = 'calc(50% - 200px)';
+    } else if (isYouTube) {
       // 16:9 widescreen music video
       win.style.width = '720px';
       win.style.height = '431px'; // 403px video + titlebar/borders
