@@ -1098,7 +1098,7 @@ html, body {
         <div class="m-proj-sub">pixel artist · nov 2025</div>
       </div>
 
-      <div class="m-proj-item" data-cat="game-design pixel-art" onclick="mOpenProjSheet('CONGA CRITTERS','IF SNAKE WAS A RACCOON PARTY',[{label:'CONCEPT ART',url:'https://www.canva.com/design/DAHDkl8b_n0/aiNSjkqZHPKelZXIeoVTaw/view?embed'},{label:'PLAY GAME (DESKTOP ONLY)',url:'/CongaCritters.html'}],this)" role="button">
+      <div class="m-proj-item" data-cat="game-design pixel-art" onclick="mOpenProjSheet('CONGA CRITTERS','IF SNAKE WAS A RACCOON PARTY',[{label:'CONCEPT ART',url:'https://www.canva.com/design/DAHDkl8b_n0/aiNSjkqZHPKelZXIeoVTaw/view?embed'},{label:'PLAY GAME',url:'/CongaCritters.html'}],this)" role="button">
         <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/X63HWac.gif');filter:brightness(0.5);"></div>
         <div class="m-proj-num">09</div>
         <div class="m-proj-title">CONGA CRITTERS</div>
@@ -1689,7 +1689,13 @@ function mOpenMediaViewer(title, src) {
       }
       const iframe = document.createElement('iframe');
       iframe.src = src;
-      if (src.includes('youtube.com/embed') || src.includes('1246724370')) {
+      if (src.includes('CongaCritters.html')) {
+        // Game hosted on this site: 4:3 screen + on-screen arrow pad for phones
+        iframe.style.cssText = 'width:100%;aspect-ratio:4/3;border:none;display:block;background:#000;';
+        body.appendChild(iframe);
+        body.appendChild(mBuildArrowPad(iframe));
+        return mShowMediaPopup();
+      } else if (src.includes('youtube.com/embed') || src.includes('1246724370')) {
         // 16:9 widescreen video: size to the video instead of the whole screen
         iframe.style.cssText = 'width:100%;aspect-ratio:16/9;border:none;display:block;';
       } else {
@@ -1702,8 +1708,44 @@ function mOpenMediaViewer(title, src) {
     }
   }
 
+  mShowMediaPopup();
+}
+
+function mShowMediaPopup() {
   document.getElementById('m-media-overlay').classList.add('open');
   document.getElementById('m-media-popup').classList.add('open');
+}
+
+// On-screen arrow pad: presses the matching arrow key inside a game iframe (same-site games only)
+function mBuildArrowPad(iframe) {
+  const KEYS = { up: ['ArrowUp', 38, '▲'], left: ['ArrowLeft', 37, '◀'], down: ['ArrowDown', 40, '▼'], right: ['ArrowRight', 39, '▶'] };
+  const pad = document.createElement('div');
+  pad.className = 'm-arrow-pad';
+  pad.style.cssText = 'display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,56px);gap:8px;justify-content:center;padding:14px 0 16px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;';
+  const place = { up: '1 / 2', left: '2 / 1', down: '2 / 2', right: '2 / 3' };
+  Object.entries(KEYS).forEach(([dir, [key, keyCode, label]]) => {
+    const btn = document.createElement('div');
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('aria-label', dir + ' arrow');
+    btn.textContent = label;
+    const [row, col] = place[dir].split(' / ');
+    btn.style.cssText = `grid-row:${row};grid-column:${col};display:flex;align-items:center;justify-content:center;border:2px solid var(--pink);border-radius:8px;color:var(--pink);font-size:22px;text-shadow:0 0 8px var(--pink);background:rgba(16,8,5,0.98);touch-action:none;transition:background 0.1s ease;`;
+    const send = (type) => {
+      const win = iframe.contentWindow; if (!win) return;
+      win.document.dispatchEvent(new win.KeyboardEvent(type, { key, code: key, keyCode, which: keyCode, bubbles: true }));
+    };
+    // Games check keys ~30x a second, so keep every press down at least 200ms (one movement step) or quick taps get missed
+    let held = false, pressedAt = 0;
+    const press = (e) => { e.preventDefault(); if (held) return; held = true; pressedAt = Date.now(); btn.style.background = 'var(--pink-border)'; send('keydown'); };
+    const release = () => {
+      if (!held) return; held = false;
+      setTimeout(() => { if (!held) { btn.style.background = 'rgba(16,8,5,0.98)'; send('keyup'); } }, Math.max(0, 200 - (Date.now() - pressedAt)));
+    };
+    btn.addEventListener('pointerdown', press);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => btn.addEventListener(ev, release));
+    pad.appendChild(btn);
+  });
+  return pad;
 }
 
 function mCloseMediaViewer() {
