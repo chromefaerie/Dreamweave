@@ -1033,7 +1033,7 @@ html, body {
         <div class="m-proj-sub">creative director · jun 2026</div>
       </div>
 
-      <div class="m-proj-item" data-cat="creative-direction" onclick="mOpenProjSheet('MARSHMALLOW LOVER','MAKES ME NIBBLE NIBBLE',[{label:'PITCH DECK',url:'https://www.canva.com/design/DAHC7TaxXAU/90yZ96BfKjv2IcZh-6wyVA/view?embed'},{label:'MUSIC VIDEO',url:''},{label:'BTS',url:'https://player.vimeo.com/video/1202620334?badge=0&autopause=0&player_id=0&app_id=58479'},{label:'TEAM',team:'MARSHMALLOW LOVER'}],this)" role="button">
+      <div class="m-proj-item" data-cat="creative-direction" onclick="mOpenProjSheet('MARSHMALLOW LOVER','MAKES ME NIBBLE NIBBLE',[{label:'PITCH DECK',url:'https://www.canva.com/design/DAHC7TaxXAU/90yZ96BfKjv2IcZh-6wyVA/view?embed'},{label:'MUSIC VIDEO',url:'https://www.youtube.com/embed/upYQWP5yct0?rel=0'},{label:'BTS',url:'https://player.vimeo.com/video/1202620334?badge=0&autopause=0&player_id=0&app_id=58479'},{label:'TEAM',team:'MARSHMALLOW LOVER'}],this)" role="button">
         <div class="m-proj-bg" style="background-image:url('https://i.imgur.com/yITadsC.jpeg');filter:brightness(0.5);"></div>
         <div class="m-proj-num">02</div>
         <div class="m-proj-title">MARSHMALLOW LOVER</div>
@@ -1668,8 +1668,14 @@ function mOpenMediaViewer(title, src) {
       }
       const iframe = document.createElement('iframe');
       iframe.src = src;
-      iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:calc(100vh - 120px);';
-      iframe.allow = 'autoplay; fullscreen';
+      if (src.includes('youtube.com/embed')) {
+        // 16:9 widescreen video: size to the video instead of the whole screen
+        iframe.style.cssText = 'width:100%;aspect-ratio:16/9;border:none;display:block;';
+      } else {
+        iframe.style.cssText = 'width:100%;flex:1;border:none;min-height:calc(100vh - 120px);';
+      }
+      iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+      iframe.allowFullscreen = true;
       body.appendChild(iframe);
     }
   }
